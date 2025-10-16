@@ -4,26 +4,43 @@
   "version": "6.0.0",
   "description": "JT400 (IBM Toolbox) for NodeJS",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/tryggingamidstodin/node-jt400.git"
   },
   "files": [
-    "dist",
+    "dist/esm",
+    "dist/cjs",
     "java/lib"
   ],
   "scripts": {
     "format-verify": "prettier --check ./ts-src/**/*.ts",
     "format": "prettier --write ./ts-src/**/*.ts",
     "lint": "tslint --project .",
-    "test": "mocha -r source-map-support/register --exit dist/unit-test -t 1000",
-    "integration-test": "mocha --parallel -r source-map-support/register --exit dist/integration-test -t 10000",
-    "build": "tsc && tsc-esm-fix --target=dist --ext=.js",
+    "test": "mocha -r source-map-support/register --exit dist/esm/unit-test -t 1000",
+    "integration-test": "mocha --parallel -r source-map-support/register --exit dist/esm/integration-test -t 10000",
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc && tsc-esm-fix --target=dist/esm --ext=.js --dirnameVar=false --filenameVar=false",
+    "build:cjs": "tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "test-compatibility": "echo 'Testing ESM...' && node test-esm.mjs && echo 'Testing CommonJS...' && node test-cjs.cjs",
     "clean": "rm -rf dist/",
     "build-dev": "tsc --watch",
-    "test-dev": "mocha dist/test --watch",
+    "test-dev": "mocha dist/esm/unit-test --watch",
     "build-all": "npm run build && npm run build-java",
     "build-java": "ant archive -buildfile ./java",
     "ci": "npm run clean && npm run build && npm run test && npm run integration-test"

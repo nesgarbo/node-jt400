@@ -1,8 +1,7 @@
 import jvm from 'java'
 //import { appendClasspath, ensureJvm, importClass } from 'java-bridge'
 import { join as joinPath } from 'path'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
+import { getCurrentDir } from '../lib/pathUtils'
 import { JT400 } from './JT400'
 
 export type BufferToJavaType = (buffer: Buffer) => any
@@ -18,8 +17,7 @@ export interface JavaBridge {
 }
 
 export const initJavaBridge = (): JavaBridge => {
-  const currentFileUrl = import.meta.url
-  const currentDir = dirname(fileURLToPath(currentFileUrl))
+  const currentDir = getCurrentDir()
 
   jvm.asyncOptions = {
     asyncSuffix: undefined,
@@ -35,8 +33,12 @@ export const initJavaBridge = (): JavaBridge => {
     'json-simple-1.1.1.jar',
     'hsqldb.jar',
   ]
+  // Since getCurrentDir() returns project root, just append java/lib directly
+  const javaLibPath = joinPath(currentDir, 'java/lib/')
+
   jars.map((jar) => {
-    jvm.classpath.push(joinPath(currentDir, '/../../java/lib/', jar))
+    const fullJarPath = joinPath(javaLibPath, jar)
+    jvm.classpath.push(fullJarPath)
   })
 
   const JT400Class = jvm.import('nodejt400.JT400')

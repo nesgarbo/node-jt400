@@ -19,33 +19,42 @@ const defaultConfig = {
   naming: 'system',
 }
 
-const javaBridge = initJavaBridge()
+let javaBridge: ReturnType<typeof initJavaBridge> | null = null
+
+function getJavaBridge() {
+  if (!javaBridge) {
+    javaBridge = initJavaBridge()
+  }
+  return javaBridge
+}
 
 export function pool(config = {}): Connection {
-  const javaCon = javaBridge.createPool(
+  const bridge = getJavaBridge()
+  const javaCon = bridge.createPool(
     JSON.stringify({ ...defaultConfig, ...config })
   )
   return createConnection({
     connection: javaCon,
     insertListFun: createInsertListInOneStatment,
-    bufferToJavaType: javaBridge.bufferToJavaType,
-    javaTypeToBuffer: javaBridge.javaTypeToBuffer,
+    bufferToJavaType: bridge.bufferToJavaType,
+    javaTypeToBuffer: bridge.javaTypeToBuffer,
     inMemory: false,
   })
 }
 export async function connect(config = {}): Promise<Connection> {
-  const javaCon = await javaBridge.createConnection(
+  const bridge = getJavaBridge()
+  const javaCon = await bridge.createConnection(
     JSON.stringify({ ...defaultConfig, ...config })
   )
   return createConnection({
     connection: javaCon,
     insertListFun: createInsertListInOneStatment,
-    bufferToJavaType: javaBridge.bufferToJavaType,
-    javaTypeToBuffer: javaBridge.javaTypeToBuffer,
+    bufferToJavaType: bridge.bufferToJavaType,
+    javaTypeToBuffer: bridge.javaTypeToBuffer,
     inMemory: false,
   })
 }
 
 export function useInMemoryDb(): InMemoryConnection {
-  return createInMemoryConnection(javaBridge)
+  return createInMemoryConnection(getJavaBridge())
 }
