@@ -72,7 +72,7 @@ describe('PGM', () => {
     const brokenProgram = jt400.pgm(
       'DTQHANG',
       [{ name: 'strengur', size: 7 }],
-      'WTMEXC',
+      'WTMEXC'
     )
 
     return brokenProgram({ strengur: 'abcd123' })

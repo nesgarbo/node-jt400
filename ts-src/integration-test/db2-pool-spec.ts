@@ -57,7 +57,7 @@ describe('jt400 pool', () => {
 
   it('should trim values as default', async () => {
     const data: any = await connection.query(
-      'select * from tsttbl order by bar',
+      'select * from tsttbl order by bar'
     )
     assert.strictEqual(data.length, 2)
     assert.strictEqual(data[1].FOO, 'bar2')
@@ -67,7 +67,7 @@ describe('jt400 pool', () => {
     const data: any = await connection.query(
       'select * from tsttbl',
       [],
-      {} as QueryOptions,
+      {} as QueryOptions
     )
     assert.strictEqual(data.length, 2)
     assert.strictEqual(data[1].FOO, 'bar2')
@@ -80,7 +80,7 @@ describe('jt400 pool', () => {
       [],
       {
         trim,
-      },
+      }
     )
     assert.strictEqual(data.length, 2)
     assert.strictEqual(data[1].FOO, 'bar2')
@@ -92,7 +92,7 @@ describe('jt400 pool', () => {
       [],
       {
         trim: false,
-      },
+      }
     )
     assert.strictEqual(data.length, 2)
     assert.strictEqual(data[1].FOO, 'bar2     ')
@@ -107,7 +107,7 @@ describe('jt400 pool', () => {
 
   it('should execute update', async () => {
     const nUpdated = await connection.update(
-      "update tsttbl set foo='bar3' where foo='bar'",
+      "update tsttbl set foo='bar3' where foo='bar'"
     )
     assert.strictEqual(nUpdated, 1)
   })
@@ -115,7 +115,7 @@ describe('jt400 pool', () => {
   it('should execute update', async () => {
     const nUpdated = await connection.update(
       'update tsttbl set foo=? where testtblid=?',
-      ['ble', 0],
+      ['ble', 0]
     )
     assert.strictEqual(nUpdated, 0)
   })
@@ -131,7 +131,7 @@ describe('jt400 pool', () => {
       .then(() => {
         return connection.query<any>(
           'select fra, timi from tsttbl where foo=?',
-          ['bar'],
+          ['bar']
         )
       })
       .then((res) => {
@@ -142,7 +142,7 @@ describe('jt400 pool', () => {
 
   it('should insert clob', async () => {
     const largeText = readFileSync(
-      currentDir + '/../../test-data/clob.txt',
+      currentDir + '/../../test-data/clob.txt'
     ).toString()
     await connection.update('update tsttbl set clob=?', [
       { type: 'CLOB', value: largeText },
@@ -192,7 +192,7 @@ describe('jt400 pool', () => {
       .catch((error) => {
         assert.strictEqual(
           error.message,
-          '[SQL0104] Token TESTTABLE was not valid. Valid tokens: : <INTEGER>.',
+          '[SQL0104] Token TESTTABLE was not valid. Valid tokens: : <INTEGER>.'
         )
         assert.ok(error.cause.stack.includes('JdbcJsonClient.insertAndGetId'))
         assert.strictEqual(error.context.sql, sql)
@@ -211,7 +211,7 @@ describe('jt400 pool', () => {
       .catch((error) => {
         assert.strictEqual(
           error.message,
-          '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.',
+          '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.'
         )
         assert.strictEqual(error.context.sql, sql)
         assert.strictEqual(error.context.params, undefined)

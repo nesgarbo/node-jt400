@@ -48,18 +48,18 @@ describe('ifs', () => {
     it('should return true if the file exist', async () => {
       const res = await ifs().moveFile(
         '/atm/test/file-to-move.txt',
-        '/atm/test/file-moved.txt',
+        '/atm/test/file-moved.txt'
       )
       assert.strictEqual(res, true)
       await ifs().moveFile(
         '/atm/test/file-moved.txt',
-        '/atm/test/file-to-move.txt',
+        '/atm/test/file-to-move.txt'
       )
     })
     it('should return false if the file does not exist', async () => {
       const res = await ifs().moveFile(
         '/atm/test/does-not-exist.txt',
-        '/atm/test/does-not-exist2.txt',
+        '/atm/test/does-not-exist2.txt'
       )
       assert.strictEqual(res, false)
     })
@@ -67,7 +67,7 @@ describe('ifs', () => {
 
   it('should get metadata for file that does not exists', async () => {
     const metadata = await ifs().fileMetadata(
-      '/atm/test/___file_that_does_not_exists____.txt',
+      '/atm/test/___file_that_does_not_exists____.txt'
     )
 
     assert.deepStrictEqual(metadata, {
@@ -78,7 +78,7 @@ describe('ifs', () => {
 
   it('should read filename promise', (done) => {
     const stream = ifs().createReadStream(
-      Promise.resolve('/atm/test/hello_world.txt'),
+      Promise.resolve('/atm/test/hello_world.txt')
     )
     let data = ''
     stream.on('data', (chunk) => {

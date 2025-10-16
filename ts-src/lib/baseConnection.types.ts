@@ -37,7 +37,7 @@ export type Execute = (sql: string, params?: Param[]) => Promise<Statement>
 export type Query = <T>(
   sql: string,
   params?: Param[],
-  options?: QueryOptions,
+  options?: QueryOptions
 ) => Promise<T[]>
 export type Update = (sql: string, params?: Param[]) => Promise<number>
 export type CreateReadStream = (sql: string, params?: Param[]) => Readable
@@ -49,14 +49,14 @@ export interface WriteStreamOptions {
 
 export type CreateWriteStream = (
   sql: string,
-  options?: WriteStreamOptions,
+  options?: WriteStreamOptions
 ) => Writable
 export type BatchUpdate = (sql: string, params?: Param[][]) => Promise<number[]>
 export type Close = () => void
 export type InsertList = (
   tableName: string,
   idColumn: string,
-  rows: any[],
+  rows: any[]
 ) => Promise<number[]>
 export interface BaseConnection {
   query: Query

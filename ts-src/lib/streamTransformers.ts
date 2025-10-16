@@ -14,8 +14,8 @@ export function arrayToObject(metadata) {
         if (chunk.length !== columnNames.length) {
           return callback(
             new Error(
-              `Array chunk length ${chunk.length} does not match columns length ${columnNames.length}`,
-            ),
+              `Array chunk length ${chunk.length} does not match columns length ${columnNames.length}`
+            )
           )
         }
 
