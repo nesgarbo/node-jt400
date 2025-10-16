@@ -1,7 +1,12 @@
 import { expect } from 'chai'
 import { readFileSync } from 'fs'
-import { pool, QueryOptions } from '..'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+import { pool, QueryOptions } from '../index'
 import { jt400 as connection } from './db'
+
+const currentFileUrl = import.meta.url
+const currentDir = dirname(fileURLToPath(currentFileUrl))
 
 describe('jt400 pool', () => {
   let idList
@@ -137,7 +142,7 @@ describe('jt400 pool', () => {
 
   it('should insert clob', async () => {
     const largeText = readFileSync(
-      __dirname + '/../../test-data/clob.txt'
+      currentDir + '/../../test-data/clob.txt'
     ).toString()
     await connection.update('update tsttbl set clob=?', [
       { type: 'CLOB', value: largeText },
@@ -147,7 +152,7 @@ describe('jt400 pool', () => {
   }).timeout(20000)
 
   it('should insert blob', async () => {
-    const image = readFileSync(__dirname + '/../../test-data/blob.png', {
+    const image = readFileSync(currentDir + '/../../test-data/blob.png', {
       encoding: 'base64',
     })
 
@@ -204,7 +209,7 @@ describe('jt400 pool', () => {
       })
       .catch((error) => {
         expect(error.message).to.equal(
-          '[SQL0104] Token - was not valid. Valid tokens: FOR USE SKIP WAIT WITH FETCH LIMIT ORDER UNION EXCEPT OFFSET.'
+          '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.'
         )
         expect(error.context.sql).to.equal(sql)
         expect(error.context.params).to.equal(undefined)

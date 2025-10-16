@@ -1,4 +1,4 @@
-import { connect } from '..'
+import { connect } from '../index'
 import { expect } from 'chai'
 
 describe('connect', () => {

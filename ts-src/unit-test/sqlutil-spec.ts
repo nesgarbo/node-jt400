@@ -1,4 +1,3 @@
-'use strict'
 import { toInsertSql } from '../lib/sqlutil'
 import { expect } from 'chai'
 

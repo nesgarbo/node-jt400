@@ -1,11 +1,15 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "ES2022",
+        "moduleResolution": "node",
+        "ignoreDeprecations": "5.0",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         "noUnusedLocals": true,
         "declaration": true,
         "noUnusedParameters": true,
         "strictNullChecks": true,
-        "target": "ES6",
+        "target": "ES2022",
         "noImplicitAny": false,
         "removeComments": true,
         "preserveConstEnums": true,

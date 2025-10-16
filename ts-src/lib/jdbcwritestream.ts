@@ -1,4 +1,4 @@
-import FlushWritable = require('flushwritable')
+import FlushWritable from 'flushwritable'
 
 export function createJdbcWriteStream(batchUpdate, statement, bufferSize) {
   bufferSize = bufferSize || 100

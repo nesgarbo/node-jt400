@@ -13,7 +13,7 @@ import { handleError } from './handleError'
 import { ifs as createIfs } from './ifs'
 import { CreateInsertList } from './insertList'
 import { JdbcStream } from './jdbcstream'
-import JSONStream = require('JSONStream')
+import JSONStream from 'JSONStream'
 
 const isJustNameMessageQ = function (
   opt: MessageQOptions

@@ -1,7 +1,8 @@
-import * as jvm from 'java'
+import jvm from 'java'
 //import { appendClasspath, ensureJvm, importClass } from 'java-bridge'
 import { join as joinPath } from 'path'
-import { promisify } from 'util'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 import { JT400 } from './JT400'
 
 export type BufferToJavaType = (buffer: Buffer) => any
@@ -17,11 +18,13 @@ export interface JavaBridge {
 }
 
 export const initJavaBridge = (): JavaBridge => {
+  const currentFileUrl = import.meta.url
+  const currentDir = dirname(fileURLToPath(currentFileUrl))
+
   jvm.asyncOptions = {
     asyncSuffix: undefined,
     syncSuffix: 'Sync',
     promiseSuffix: '', // Generate methods returning promises, using the suffix Promise.
-    promisify: promisify,
   }
   jvm.options.push('-Xrs') // fixing the signal handling issues (for exmaple ctrl-c)
   jvm.options.push('-Dcom.ibm.as400.access.AS400.guiAvailable=false') // Removes gui prompts
@@ -33,7 +36,7 @@ export const initJavaBridge = (): JavaBridge => {
     'hsqldb.jar',
   ]
   jars.map((jar) => {
-    jvm.classpath.push(joinPath(__dirname, '/../../java/lib/', jar))
+    jvm.classpath.push(joinPath(currentDir, '/../../java/lib/', jar))
   })
 
   const JT400Class = jvm.import('nodejt400.JT400')
@@ -68,7 +71,7 @@ export const initJavaBridge = (): JavaBridge => {
 //   })
 //   appendClasspath(
 //     ['jt400.jar', 'jt400wrap.jar', 'json-simple-1.1.1.jar', 'hsqldb.jar'].map(
-//       (jar) => joinPath(__dirname, '/../../java/lib/', jar)
+//       (jar) => joinPath(currentDir, '/../../java/lib/', jar)
 //     )
 //   )
 
