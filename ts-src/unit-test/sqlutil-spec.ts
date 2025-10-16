@@ -13,8 +13,9 @@ describe('sql helpers', () => {
         baz: 456,
       },
     ]
-    assert.strictEqual(toInsertSql('myTable', records),
-      'INSERT INTO myTable (foo, baz) VALUES(?, ?), (?, ?)'
+    assert.strictEqual(
+      toInsertSql('myTable', records),
+      'INSERT INTO myTable (foo, baz) VALUES(?, ?), (?, ?)',
     )
   })
 })

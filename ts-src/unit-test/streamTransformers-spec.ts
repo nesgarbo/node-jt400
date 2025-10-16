@@ -17,7 +17,7 @@ describe('streamTransformers', () => {
             JSON.stringify([
               [1, 'Jón'],
               [2, 'Gunna'],
-            ])
+            ]),
           )
           this.push(null)
         },
@@ -58,7 +58,7 @@ describe('streamTransformers', () => {
             JSON.stringify([
               [1, 'Jón'],
               [2, 'Gunna'],
-            ])
+            ]),
           )
           this.push(null)
         },
@@ -90,7 +90,7 @@ describe('streamTransformers', () => {
             JSON.stringify([
               [1, 'Jón', 'extra'],
               [2, 'Gunna', 'extra'],
-            ])
+            ]),
           )
           this.push(null)
         },
@@ -105,8 +105,9 @@ describe('streamTransformers', () => {
 
       objectStream.on('error', (err) => {
         try {
-          assert.strictEqual(err.message, 
-            'Array chunk length 3 does not match columns length 2'
+          assert.strictEqual(
+            err.message,
+            'Array chunk length 3 does not match columns length 2',
           )
           done()
         } catch (e) {
