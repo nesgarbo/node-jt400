@@ -15,7 +15,7 @@ xdescribe('MessageQ', function () {
       }
     }
 
-    readnext()
+    await readnext()
   })
 
   it('should open a message queue and write/read a message.', async () => {

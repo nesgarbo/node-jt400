@@ -82,7 +82,7 @@ export interface Connection extends BaseConnection {
   pgm: (
     programName: string,
     paramsSchema: PgmParamType[],
-    libraryName?: string
+    libraryName?: string,
   ) => any
   defineProgram: (options: ProgramDefinitionOptions) => any
   getTablesAsStream: (params: any) => Readable
@@ -92,7 +92,7 @@ export interface Connection extends BaseConnection {
   openMessageQ: (params: MessageQOptions) => Promise<MessageQ>
   createKeyedDataQ: (params: DataQOptions) => KeyedDataQ
   openMessageFile: (
-    params: MessageFileHandlerOptions
+    params: MessageFileHandlerOptions,
   ) => Promise<MessageFileHandler>
   ifs: () => Ifs
   close: Close

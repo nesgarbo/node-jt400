@@ -18,7 +18,7 @@ describe('keyed dataQ', () => {
   it('should fail on timeout', (done) => {
     const dataQ = jt400.createKeyedDataQ({ name: 'SDQS1' })
     dataQ
-      .read({ key: 'mytestkey', wait: 1 /*sec*/ })
+      .read({ key: 'mytestkey', wait: 1 /* sec */ })
       .catch((err) => {
         assert.ok(err.message.includes('timeout, key: mytestkey'))
       })

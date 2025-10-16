@@ -10,7 +10,7 @@ describe('connect', () => {
 
   it('should close', async () => {
     const db = await connect()
-    await db.close()
+    db.close()
 
     return db
       .update('delete from tsttbl')

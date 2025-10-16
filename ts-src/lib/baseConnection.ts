@@ -20,7 +20,7 @@ function paramsToJson(params: Param[]) {
 export const createBaseConnection = function (
   jdbcConnection: JDBCConnection,
   insertListFun: CreateInsertList,
-  inMemory: boolean
+  inMemory: boolean,
 ): BaseConnection {
   const baseConnection: BaseConnection = {
     query(sql, params, options) {
@@ -79,7 +79,7 @@ export const createBaseConnection = function (
                   const transformArrayToObject = arrayToObject(metadata)
                   stream = new JdbcStream({
                     jdbcStream: statement.asStreamSync(
-                      options.bufferSize || 100
+                      options.bufferSize || 100,
                     ),
                   })
 
@@ -95,7 +95,7 @@ export const createBaseConnection = function (
                         .next()
                         .then(JSON.parse)
                         .then((value) => ({
-                          done: !Boolean(value),
+                          done: !value,
                           value,
                         }))
                     },
@@ -129,7 +129,7 @@ export const createBaseConnection = function (
       return createJdbcWriteStream(
         baseConnection.batchUpdate,
         sql,
-        options && options.bufferSize
+        options && options.bufferSize,
       )
     },
 

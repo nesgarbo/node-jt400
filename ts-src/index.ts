@@ -31,7 +31,7 @@ function getJavaBridge() {
 export function pool(config = {}): Connection {
   const bridge = getJavaBridge()
   const javaCon = bridge.createPool(
-    JSON.stringify({ ...defaultConfig, ...config })
+    JSON.stringify({ ...defaultConfig, ...config }),
   )
   return createConnection({
     connection: javaCon,
@@ -44,7 +44,7 @@ export function pool(config = {}): Connection {
 export async function connect(config = {}): Promise<Connection> {
   const bridge = getJavaBridge()
   const javaCon = await bridge.createConnection(
-    JSON.stringify({ ...defaultConfig, ...config })
+    JSON.stringify({ ...defaultConfig, ...config }),
   )
   return createConnection({
     connection: javaCon,

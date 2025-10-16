@@ -1,5 +1,5 @@
 import jvm from 'java'
-//import { appendClasspath, ensureJvm, importClass } from 'java-bridge'
+// import { appendClasspath, ensureJvm, importClass } from 'java-bridge'
 import { join as joinPath } from 'path'
 import { getCurrentDir } from '../lib/pathUtils'
 import { JT400 } from './JT400'
@@ -36,7 +36,7 @@ export const initJavaBridge = (): JavaBridge => {
   // Since getCurrentDir() returns project root, just append java/lib directly
   const javaLibPath = joinPath(currentDir, 'java/lib/')
 
-  jars.map((jar) => {
+  jars.forEach((jar) => {
     const fullJarPath = joinPath(javaLibPath, jar)
     jvm.classpath.push(fullJarPath)
   })
