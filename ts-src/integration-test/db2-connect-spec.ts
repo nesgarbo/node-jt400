@@ -1,11 +1,11 @@
 import { connect } from '../index'
-import { expect } from 'chai'
+import assert from 'assert'
 
 describe('connect', () => {
   it('should connect', async () => {
     const db = await connect()
     const nUpdated = await db.update('delete from tsttbl')
-    expect(nUpdated).to.be.least(0)
+    assert.ok(nUpdated >= 0)
   }).timeout(10000)
 
   it('should close', async () => {
@@ -18,8 +18,8 @@ describe('connect', () => {
         throw new Error('should not be connected')
       })
       .catch((err) => {
-        expect(err.message).to.equal('The connection does not exist.')
-        expect(err.category).to.equal('OperationalError')
+        assert.strictEqual(err.message, 'The connection does not exist.')
+        assert.strictEqual(err.category, 'OperationalError')
       })
   }).timeout(6000)
 })

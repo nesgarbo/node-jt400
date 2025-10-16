@@ -1,5 +1,5 @@
 import { jt400 } from './db'
-import { expect } from 'chai'
+import assert from 'assert'
 
 describe('MessageFileHandler', async function () {
   it('should open a message file and read an id', async () => {
@@ -7,6 +7,6 @@ describe('MessageFileHandler', async function () {
     const msg = await file.read({ messageId: 'CPF2105' })
     const expectedText = 'Object &1 in &2 type *&3 not found.'
     const text = await msg.getText()
-    expect(text).to.equal(expectedText)
+    assert.strictEqual(text, expectedText)
   }).timeout(5000)
 })

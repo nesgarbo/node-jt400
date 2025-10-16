@@ -1,5 +1,5 @@
 import { jt400 } from './db'
-import { expect } from 'chai'
+import assert from 'assert'
 
 describe('keyed dataQ', () => {
   it('should read and write', (done) => {
@@ -8,7 +8,7 @@ describe('keyed dataQ', () => {
     dataQ
       .read('mytestkey')
       .then((data) => {
-        expect(data).to.equal('ping')
+        assert.strictEqual(data, 'ping')
       })
       .then(done, done)
 
@@ -20,7 +20,7 @@ describe('keyed dataQ', () => {
     dataQ
       .read({ key: 'mytestkey', wait: 1 /*sec*/ })
       .catch((err) => {
-        expect(err.message).to.contain('timeout, key: mytestkey')
+        assert.ok(err.message.includes('timeout, key: mytestkey'))
       })
       .then(done, done)
   })
@@ -30,7 +30,7 @@ describe('keyed dataQ', () => {
     dataQ
       .read({ key: 'mytestkey', wait: 1, writeKeyLength: 11 })
       .then((res) => {
-        expect(res.data).to.equal('ping')
+        assert.strictEqual(res.data, 'ping')
         res.write('pong')
       })
       .catch((err) => {
@@ -40,7 +40,7 @@ describe('keyed dataQ', () => {
     dataQ.write('mytestkey', 'returnkey  ping')
 
     return dataQ.read({ key: 'returnkey  ', wait: 10 }).then((data) => {
-      expect(data).to.equal('pong')
+      assert.strictEqual(data, 'pong')
     })
   })
 })
