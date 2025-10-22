@@ -110,7 +110,7 @@ describe('jt400 pool', () => {
     assert.strictEqual(nUpdated, 1)
   })
 
-  it('should execute update', async () => {
+  it('should execute update with parameters', async () => {
     const nUpdated = await connection.update(
       'update tsttbl set foo=? where testtblid=?',
       ['ble', 0],
