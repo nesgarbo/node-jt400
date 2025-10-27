@@ -1,5 +1,5 @@
-import { expect } from 'chai'
-import * as streamEqual from 'stream-equal'
+import assert from 'assert'
+import streamEqual from 'stream-equal'
 import { jt400 } from './db'
 const { ifs } = jt400
 
@@ -12,7 +12,7 @@ describe('ifs', () => {
     })
 
     stream.on('end', () => {
-      expect(data).to.equal('Halló heimur!\n')
+      assert.strictEqual(data, 'Halló heimur!\n')
       done()
     })
 
@@ -21,7 +21,7 @@ describe('ifs', () => {
 
   it('should get file metadata', async () => {
     const metadata = await ifs().fileMetadata('/atm/test/hello_world.txt')
-    expect(metadata).to.deep.equal({
+    assert.deepStrictEqual(metadata, {
       exists: true,
       length: 15,
     })
@@ -29,48 +29,48 @@ describe('ifs', () => {
   describe('list files', () => {
     it('should list files', async () => {
       const files = await ifs().listFiles('/atm/test')
-      expect(files.length).to.be.above(0)
+      assert.ok(files.length > 0)
     })
     it('should return empty array for empty folder', async () => {
       const files = await ifs().listFiles('/atm/test/emptyFolder')
-      expect(files.length).to.equal(0)
+      assert.strictEqual(files.length, 0)
     })
     it('should return empty array for a folder that does not exist', async () => {
       const files = await ifs().listFiles('/atm/test/does-not-exist')
-      expect(files.length).to.equal(0)
+      assert.strictEqual(files.length, 0)
     })
     it('should return empty array if the folder is a file', async () => {
       const files = await ifs().listFiles('/atm/test/hello_world.txt')
-      expect(files.length).to.equal(0)
+      assert.strictEqual(files.length, 0)
     })
   })
   describe('move file', () => {
     it('should return true if the file exist', async () => {
       const res = await ifs().moveFile(
         '/atm/test/file-to-move.txt',
-        '/atm/test/file-moved.txt'
+        '/atm/test/file-moved.txt',
       )
-      expect(res).to.equal(true)
+      assert.strictEqual(res, true)
       await ifs().moveFile(
         '/atm/test/file-moved.txt',
-        '/atm/test/file-to-move.txt'
+        '/atm/test/file-to-move.txt',
       )
     })
     it('should return false if the file does not exist', async () => {
       const res = await ifs().moveFile(
         '/atm/test/does-not-exist.txt',
-        '/atm/test/does-not-exist2.txt'
+        '/atm/test/does-not-exist2.txt',
       )
-      expect(res).to.equal(false)
+      assert.strictEqual(res, false)
     })
   })
 
   it('should get metadata for file that does not exists', async () => {
     const metadata = await ifs().fileMetadata(
-      '/atm/test/___file_that_does_not_exists____.txt'
+      '/atm/test/___file_that_does_not_exists____.txt',
     )
 
-    expect(metadata).to.deep.equal({
+    assert.deepStrictEqual(metadata, {
       exists: false,
       length: 0,
     })
@@ -78,7 +78,7 @@ describe('ifs', () => {
 
   it('should read filename promise', (done) => {
     const stream = ifs().createReadStream(
-      Promise.resolve('/atm/test/hello_world.txt')
+      Promise.resolve('/atm/test/hello_world.txt'),
     )
     let data = ''
     stream.on('data', (chunk) => {
@@ -86,7 +86,7 @@ describe('ifs', () => {
     })
 
     stream.on('end', () => {
-      expect(data).to.equal('Halló heimur!\n')
+      assert.strictEqual(data, 'Halló heimur!\n')
       done()
     })
 
@@ -108,12 +108,12 @@ describe('ifs', () => {
         })
 
         stream.on('end', () => {
-          expect(data).to.equal('Halló heimur!\n')
+          assert.strictEqual(data, 'Halló heimur!\n')
           done()
           /*
                         ifs().deleteFile('/atm/test2/new_file.txt')
                             .then((res) => {
-                                expect(res).to.equal(true);
+                                assert.strictEqual(res, true);
                                 done();
                             })
                             .catch(done);
@@ -136,7 +136,7 @@ describe('ifs', () => {
       const newImage = ifs().createReadStream('/atm/test2/image.jpg')
 
       return streamEqual(oldImage, newImage).then((equal) => {
-        expect(equal).to.be.equal(true)
+        assert.strictEqual(equal, true)
       })
     })
   }).timeout(50000)

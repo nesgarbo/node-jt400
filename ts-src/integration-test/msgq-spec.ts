@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import assert from 'assert'
 import { jt400 } from './db'
 xdescribe('MessageQ', function () {
   let msgq
@@ -15,12 +15,12 @@ xdescribe('MessageQ', function () {
       }
     }
 
-    readnext()
+    await readnext()
   })
 
   it('should open a message queue and write/read a message.', async () => {
     const testMessage = 'Test Message'
     await msgq.sendInformational(testMessage)
-    expect(await msgq.read()).to.equal(testMessage)
+    assert.strictEqual(await msgq.read(), testMessage)
   }).timeout(5000)
 })

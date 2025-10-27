@@ -20,45 +20,47 @@ const defaultConfig = {
   naming: 'system',
 }
 
-const javaBridge = initJavaBridge()
+let javaBridge: ReturnType<typeof initJavaBridge> | null = null
 
+function getJavaBridge() {
+  if (!javaBridge) {
+    javaBridge = initJavaBridge()
+  }
+  return javaBridge
+}
 export type JT400Options = {
   logger?: Logger
 }
-
 export function pool(config = {}, options: JT400Options = {}): Connection {
-  const javaCon = javaBridge.createPool(
-    JSON.stringify({ ...defaultConfig, ...config })
+  const bridge = getJavaBridge()
+  const javaCon = bridge.createPool(
+    JSON.stringify({ ...defaultConfig, ...config }),
   )
   return createConnection({
     connection: javaCon,
     insertListFun: createInsertListInOneStatment,
-    bufferToJavaType: javaBridge.bufferToJavaType,
-    javaTypeToBuffer: javaBridge.javaTypeToBuffer,
+    bufferToJavaType: bridge.bufferToJavaType,
+    javaTypeToBuffer: bridge.javaTypeToBuffer,
     logger: options.logger || createDefaultLogger(),
     inMemory: false,
   })
 }
-export async function connect(
-  config = {},
-  options: JT400Options = {}
-): Promise<Connection> {
-  const javaCon = await javaBridge.createConnection(
-    JSON.stringify({ ...defaultConfig, ...config })
+export async function connect(config = {}, options: JT400Options = {}): Promise<Connection> {
+  const bridge = getJavaBridge()
+  const javaCon = await bridge.createConnection(
+    JSON.stringify({ ...defaultConfig, ...config }),
   )
   return createConnection({
     connection: javaCon,
     insertListFun: createInsertListInOneStatment,
-    bufferToJavaType: javaBridge.bufferToJavaType,
-    javaTypeToBuffer: javaBridge.javaTypeToBuffer,
+    bufferToJavaType: bridge.bufferToJavaType,
+    javaTypeToBuffer: bridge.javaTypeToBuffer,
     logger: options.logger || createDefaultLogger(),
     inMemory: false,
   })
 }
 
 export function useInMemoryDb(options: JT400Options = {}): InMemoryConnection {
-  return createInMemoryConnection(
-    javaBridge,
-    options.logger || createDefaultLogger()
-  )
+  return createInMemoryConnection(getJavaBridge(),
+    options.logger || createDefaultLogger())
 }

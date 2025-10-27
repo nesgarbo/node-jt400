@@ -148,7 +148,7 @@ export const createBaseConnection = function (
                   const transformArrayToObject = arrayToObject(metadata)
                   stream = new JdbcStream({
                     jdbcStream: statement.asStreamSync(
-                      options.bufferSize || 100
+                      options.bufferSize || 100,
                     ),
                   })
                   stream.on('end', () => {
@@ -246,7 +246,7 @@ export const createBaseConnection = function (
       const stream = createJdbcWriteStream(
         baseConnection.batchUpdate,
         sql,
-        options && options.bufferSize
+        options && options.bufferSize,
       )
       stream.on('finish', () => {
         logger.info(

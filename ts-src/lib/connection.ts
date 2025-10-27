@@ -13,11 +13,11 @@ import { handleError } from './handleError'
 import { ifs as createIfs } from './ifs'
 import { CreateInsertList } from './insertList'
 import { JdbcStream } from './jdbcstream'
+import JSONStream from 'JSONStream'
 import { Logger } from './logger'
-import JSONStream = require('JSONStream')
 
 const isJustNameMessageQ = function (
-  opt: MessageQOptions
+  opt: MessageQOptions,
 ): opt is JustNameMessageQ {
   return (opt as JustNameMessageQ).name !== undefined
 }
@@ -70,7 +70,7 @@ export function createConnection({
         jdbcStream: connection.getTablesAsStreamSync(
           opt.catalog,
           opt.schema,
-          opt.table || '%'
+          opt.table || '%',
         ),
       }).pipe(JSONStream.parse([true]))
     },
@@ -152,7 +152,7 @@ export function createConnection({
         opt.programName,
         JSON.stringify(opt.paramsSchema),
         opt.libraryName || '*LIBL',
-        opt.ccsid
+        opt.ccsid,
       )
       return function run(params, timeout = 3) {
         return pgm

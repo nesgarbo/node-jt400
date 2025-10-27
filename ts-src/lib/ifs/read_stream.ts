@@ -1,4 +1,4 @@
-import util = require('util')
+import util from 'util'
 import { Readable } from 'stream'
 import { JavaTypeToBuffer } from '../../java'
 import { IfsReadStream as IfsReadStreamType } from '../../java/JT400'

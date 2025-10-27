@@ -1,4 +1,4 @@
-import { expect } from 'chai'
+import assert from 'assert'
 import { jt400 } from './db'
 
 describe('PGM', () => {
@@ -11,8 +11,8 @@ describe('PGM', () => {
       getIsk({ mynt: 'Kr.' }),
       getIsk({ mynt: 'EUR' }),
     ])
-    expect(result[0].mynt).to.equal('ISK')
-    expect(result[1].mynt).to.equal('EUR')
+    assert.strictEqual(result[0].mynt, 'ISK')
+    assert.strictEqual(result[1].mynt, 'EUR')
   }).timeout(15000)
 
   it('should run GETNETFG', async () => {
@@ -25,7 +25,7 @@ describe('PGM', () => {
       ],
     })
     const result = await getNetfang({ kt: '0123456789' })
-    expect(result.valid).to.equal('J')
+    assert.strictEqual(result.valid, 'J')
   })
 
   it('should run pgm with datastructure param', async () => {
@@ -43,9 +43,9 @@ describe('PGM', () => {
     })
 
     const result = await tstDs({ p1: { txt1: 'tst', num1: 400, num2: 7 } })
-    expect(result.p1.txt1).to.equal('tst')
-    expect(result.p1.num1).to.equal(401)
-    expect(result.p1.num2).to.equal(8)
+    assert.strictEqual(result.p1.txt1, 'tst')
+    assert.strictEqual(result.p1.num1, 401)
+    assert.strictEqual(result.p1.num2, 8)
   })
 
   it('should run pgm with datastructure param with columns format', async () => {
@@ -63,16 +63,16 @@ describe('PGM', () => {
     })
 
     const result = await tstDs({ p1: { txt1: 'tst', num1: 400, num2: 7 } })
-    expect(result.p1.txt1).to.equal('tst')
-    expect(result.p1.num1).to.equal(401)
-    expect(result.p1.num2).to.equal(8)
+    assert.strictEqual(result.p1.txt1, 'tst')
+    assert.strictEqual(result.p1.num1, 401)
+    assert.strictEqual(result.p1.num2, 8)
   })
 
   it('should get timeout errors', () => {
     const brokenProgram = jt400.pgm(
       'DTQHANG',
       [{ name: 'strengur', size: 7 }],
-      'WTMEXC'
+      'WTMEXC',
     )
 
     return brokenProgram({ strengur: 'abcd123' })
@@ -80,9 +80,9 @@ describe('PGM', () => {
         throw new Error('Not the correct error')
       })
       .catch((e) => {
-        expect(e.category).to.equal('OperationalError')
-        expect(e).not.to.equal(null)
-        expect(e.message).to.contain('Connection was dropped unexpectedly.')
+        assert.strictEqual(e.category, 'OperationalError')
+        assert.notStrictEqual(e, null)
+        assert.ok(e.message.includes('Connection was dropped unexpectedly.'))
       })
   })
 })
