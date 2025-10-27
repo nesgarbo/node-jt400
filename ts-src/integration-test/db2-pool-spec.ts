@@ -212,7 +212,7 @@ describe('jt400 pool', () => {
           '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.',
         )
         assert.strictEqual(error.context.sql, sql)
-        assert.strictEqual(error.context.params, undefined)
+        assert.deepStrictEqual(error.context.params, [])
         assert.strictEqual(error.category, 'ProgrammerError')
       })
   })
