@@ -23,7 +23,6 @@
     "build": "tsc && tsc-esm-fix --target=dist --ext=.js",
     "clean": "rm -rf dist/",
     "build-dev": "tsc --watch",
-    "test-dev": "mocha dist/test --watch",
     "build-all": "npm run build && npm run build-java",
     "build-java": "ant archive -buildfile ./java",
     "ci": "npm run clean && npm run build && npm run test && npm run integration-test"
@@ -52,10 +51,11 @@
     "oops-error": "^2.5.0"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.6",
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.10.4",
     "husky": "^8.0.3",
-    "mocha": "^10.2.0",
+    "mocha": "^11.7.1",
     "prettier": "^2.3.2",
     "source-map-support": "^0.5.21",
     "stream-equal": "^2.0.1",

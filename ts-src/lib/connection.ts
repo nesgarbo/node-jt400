@@ -27,16 +27,19 @@ export function createConnection({
   bufferToJavaType,
   javaTypeToBuffer,
   inMemory,
+  logger,
 }: {
   connection: JT400
   insertListFun: CreateInsertList
   bufferToJavaType: BufferToJavaType
   javaTypeToBuffer: JavaTypeToBuffer
   inMemory: boolean
+  logger: Logger
 }): Connection {
   const baseConnection = createBaseConnection(
     connection,
     insertListFun,
+    logger,
     inMemory
   )
   const jt400: Connection = {
@@ -46,6 +49,7 @@ export function createConnection({
       const transactionContext = createBaseConnection(
         t,
         insertListFun,
+        logger,
         inMemory
       )
 
