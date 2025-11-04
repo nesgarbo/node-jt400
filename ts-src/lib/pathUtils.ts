@@ -2,40 +2,68 @@ import { dirname, join, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { existsSync } from 'fs'
 
-/**
- * Get the directory where this module file is located
- * Works for both ESM and CommonJS
- *
- * In ESM: Uses import.meta.url (accessed via eval to avoid TypeScript errors)
- * In CommonJS: Uses __dirname (injected by Node.js)
- */
-function getModuleDir(): string {
-  try {
-    // ESM: Access import.meta.url
-    // eslint-disable-next-line no-eval
-    const metaUrl = eval(
-      'typeof import !== "undefined" && import.meta && import.meta.url',
-    )
-    if (metaUrl) {
-      return dirname(fileURLToPath(metaUrl))
-    }
-  } catch {
-    // Not in ESM context
+// Store the module URL at load time
+// This works by creating a new Error and parsing the stack trace
+// In ESM, the stack trace contains file:// URLs, in CommonJS it contains file paths
+let moduleDir: string | undefined
+
+function initModuleDir(): string {
+  if (moduleDir) {
+    return moduleDir
   }
 
+  // Try CommonJS __dirname first (most reliable when available)
   try {
-    // CommonJS: Access __dirname
     // eslint-disable-next-line no-eval
     const dir = eval('typeof __dirname !== "undefined" ? __dirname : null')
     if (dir) {
+      moduleDir = dir
       return dir
     }
   } catch {
-    // Not in CommonJS context
+    // Not in CommonJS
   }
 
-  // Final fallback - shouldn't happen in normal usage
-  return process.cwd()
+  // For ESM: Use stack trace to find this file's location
+  try {
+    const stack = new Error().stack
+    if (stack) {
+      // Look for file:// URLs in the stack
+      const fileUrlMatch = stack.match(/file:\/\/[^\s):]+/g)
+      if (fileUrlMatch) {
+        for (const url of fileUrlMatch) {
+          // Find the one that points to pathUtils
+          if (url.includes('pathUtils')) {
+            // Remove line:column if present
+            let cleanUrl = url.split(':').slice(0, 3).join(':')
+            // Source maps may add /ts-src/ to the path, remove it
+            // e.g., /dist/esm/lib/ts-src/lib/pathUtils.ts -> /dist/esm/lib/pathUtils.js
+            cleanUrl = cleanUrl.replace(/\/ts-src\/[^/]+\//, '/')
+            // Also change .ts extension to .js if present (from source maps)
+            cleanUrl = cleanUrl.replace(/\.ts$/, '.js')
+            const dir = dirname(fileURLToPath(cleanUrl))
+            moduleDir = dir
+            return dir
+          }
+        }
+      }
+    }
+  } catch {
+    // Stack parsing failed
+  }
+
+  // Last resort fallback
+  const fallback = process.cwd()
+  moduleDir = fallback
+  return fallback
+}
+
+/**
+ * Get the directory where this module file is located
+ * Works for both ESM and CommonJS
+ */
+function getModuleDir(): string {
+  return initModuleDir()
 }
 
 /**
