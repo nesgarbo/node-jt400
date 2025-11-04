@@ -45,7 +45,10 @@ export function pool(config = {}, options: JT400Options = {}): Connection {
     inMemory: false,
   })
 }
-export async function connect(config = {}, options: JT400Options = {}): Promise<Connection> {
+export async function connect(
+  config = {},
+  options: JT400Options = {},
+): Promise<Connection> {
   const bridge = getJavaBridge()
   const javaCon = await bridge.createConnection(
     JSON.stringify({ ...defaultConfig, ...config }),
@@ -61,6 +64,8 @@ export async function connect(config = {}, options: JT400Options = {}): Promise<
 }
 
 export function useInMemoryDb(options: JT400Options = {}): InMemoryConnection {
-  return createInMemoryConnection(getJavaBridge(),
-    options.logger || createDefaultLogger())
+  return createInMemoryConnection(
+    getJavaBridge(),
+    options.logger || createDefaultLogger(),
+  )
 }

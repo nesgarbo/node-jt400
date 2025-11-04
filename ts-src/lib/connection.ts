@@ -41,7 +41,7 @@ export function createConnection({
     connection,
     insertListFun,
     logger,
-    inMemory
+    inMemory,
   )
   const jt400: Connection = {
     ...baseConnection,
@@ -51,7 +51,7 @@ export function createConnection({
         t,
         insertListFun,
         logger,
-        inMemory
+        inMemory,
       )
 
       try {

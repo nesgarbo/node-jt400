@@ -9,7 +9,7 @@ export interface Ifs {
   createReadStream: (fileName: string | Promise<string>) => Readable
   createWriteStream: (
     fileName: string | Promise<string>,
-    options?: { append: boolean; ccsid?: number }
+    options?: { append: boolean; ccsid?: number },
   ) => Writable
   listFiles: (folderName: string) => Promise<string[]>
   moveFile: (fileName: string, newFileName: string) => Promise<boolean>
