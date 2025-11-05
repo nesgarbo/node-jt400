@@ -31,7 +31,7 @@ export const initJavaBridge = (): JavaBridge => {
     'json-simple-1.1.1.jar',
     'hsqldb.jar',
   ]
-  const javaLibPath = joinPath(currentDir, '../../../java/lib')
+  const javaLibPath = joinPath(currentDir, '../../java/lib')
 
   jars.forEach((jar) => {
     const fullJarPath = joinPath(javaLibPath, jar)

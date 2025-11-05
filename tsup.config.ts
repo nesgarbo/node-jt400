@@ -7,7 +7,7 @@ export default defineConfig([
   {
     entry: ['ts-src/**/*.ts'],
     format: ['esm'],
-    outDir: 'dist/esm',
+    outDir: 'dist-esm',
     sourcemap: true,
     dts: true,
     shims: true,
@@ -25,7 +25,7 @@ export default defineConfig([
         type: 'module',
       }
       writeFileSync(
-        join('dist', 'esm', 'package.json'),
+        join('dist-esm', 'package.json'),
         JSON.stringify(packageJson, null, 2),
       )
     },
@@ -34,7 +34,7 @@ export default defineConfig([
   {
     entry: ['ts-src/**/*.ts'],
     format: ['cjs'],
-    outDir: 'dist/cjs',
+    outDir: 'dist-cjs',
     sourcemap: true,
     dts: {
       resolve: true,
@@ -53,7 +53,7 @@ export default defineConfig([
         type: 'commonjs',
       }
       writeFileSync(
-        join('dist', 'cjs', 'package.json'),
+        join('dist-cjs', 'package.json'),
         JSON.stringify(packageJson, null, 2),
       )
     },

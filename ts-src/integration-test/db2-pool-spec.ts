@@ -140,7 +140,7 @@ describe('jt400 pool', () => {
 
   it('should insert clob', async () => {
     const largeText = readFileSync(
-      join(currentDir, '../../../test-data/clob.txt'),
+      join(currentDir, '../../test-data/clob.txt'),
     ).toString()
     await connection.update('update tsttbl set clob=?', [
       { type: 'CLOB', value: largeText },
@@ -150,12 +150,9 @@ describe('jt400 pool', () => {
   }).timeout(20000)
 
   it('should insert blob', async () => {
-    const image = readFileSync(
-      join(currentDir, '../../../test-data/blob.png'),
-      {
-        encoding: 'base64',
-      },
-    )
+    const image = readFileSync(join(currentDir, '../../test-data/blob.png'), {
+      encoding: 'base64',
+    })
 
     await connection.update('update tsttbl set blob=?', [
       { type: 'BLOB', value: image },
