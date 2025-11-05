@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "module": "ES2022",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": false,
         "ignoreDeprecations": "5.0",
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,

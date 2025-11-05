@@ -1,4 +1,4 @@
-import { useInMemoryDb } from '../index'
+import { useInMemoryDb } from '../index.js'
 import { Readable } from 'stream'
 import { parse } from 'JSONStream'
 import assert from 'assert'

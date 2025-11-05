@@ -1,4 +1,4 @@
-import { connect } from '../index'
+import { connect } from '../index.js'
 import assert from 'assert'
 
 describe('connect', () => {

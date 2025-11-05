@@ -1,6 +1,6 @@
 import { Readable } from 'stream'
-import { BaseConnection, Close } from './baseConnection.types'
-import { Ifs } from './ifs/types'
+import { BaseConnection, Close } from './baseConnection.types.js'
+import { Ifs } from './ifs/types.js'
 
 export interface ProgramDefinitionOptions {
   programName: string

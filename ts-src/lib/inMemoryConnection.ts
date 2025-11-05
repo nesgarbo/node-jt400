@@ -1,8 +1,8 @@
-import { JavaBridge } from '../java'
-import { createConnection } from './connection'
-import { Connection } from './connection.types'
-import { createStandardInsertList } from './insertList'
-import { Logger } from './logger'
+import { JavaBridge } from '../java/index.js'
+import { createConnection } from './connection.js'
+import { Connection } from './connection.types.js'
+import { createStandardInsertList } from './insertList.js'
+import { Logger } from './logger.js'
 
 export interface InMemoryConnection extends Connection {
   mockPgm: (programName: string, fn: (input: any) => any) => InMemoryConnection

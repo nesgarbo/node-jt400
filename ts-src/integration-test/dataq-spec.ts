@@ -1,4 +1,4 @@
-import { jt400 } from './db'
+import { jt400 } from './db.js'
 import assert from 'assert'
 
 describe('keyed dataQ', () => {

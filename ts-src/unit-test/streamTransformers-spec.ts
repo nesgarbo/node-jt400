@@ -1,5 +1,5 @@
 import { Readable } from 'stream'
-import { arrayToObject } from '../lib/streamTransformers'
+import { arrayToObject } from '../lib/streamTransformers.js'
 import { parse } from 'JSONStream'
 import assert from 'assert'
 

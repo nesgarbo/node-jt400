@@ -1,12 +1,12 @@
 import { parse } from 'JSONStream'
-import { JDBCConnection } from '../java/JT400'
-import { BaseConnection, Param } from './baseConnection.types'
-import { handleError } from './handleError'
-import { CreateInsertList } from './insertList'
-import { JdbcStream } from './jdbcstream'
-import { createJdbcWriteStream } from './jdbcwritestream'
-import { Logger } from './logger'
-import { arrayToObject } from './streamTransformers'
+import { JDBCConnection } from '../java/JT400.js'
+import { BaseConnection, Param } from './baseConnection.types.js'
+import { handleError } from './handleError.js'
+import { CreateInsertList } from './insertList.js'
+import { JdbcStream } from './jdbcstream.js'
+import { createJdbcWriteStream } from './jdbcwritestream.js'
+import { Logger } from './logger.js'
+import { arrayToObject } from './streamTransformers.js'
 
 function convertDateValues(v: any) {
   return v instanceof Date

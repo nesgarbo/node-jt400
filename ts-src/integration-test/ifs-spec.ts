@@ -1,6 +1,6 @@
 import assert from 'assert'
 import streamEqual from 'stream-equal'
-import { jt400 } from './db'
+import { jt400 } from './db.js'
 const { ifs } = jt400
 
 describe('ifs', () => {

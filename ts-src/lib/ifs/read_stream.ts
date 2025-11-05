@@ -1,7 +1,7 @@
 import util from 'util'
 import { Readable } from 'stream'
-import { JavaTypeToBuffer } from '../../java'
-import { IfsReadStream as IfsReadStreamType } from '../../java/JT400'
+import { JavaTypeToBuffer } from '../../java/index.js'
+import { IfsReadStream as IfsReadStreamType } from '../../java/JT400.js'
 
 export function IfsReadStream(opt: {
   ifsReadStream: Promise<IfsReadStreamType>

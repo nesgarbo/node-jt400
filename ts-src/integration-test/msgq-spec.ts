@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { jt400 } from './db'
+import { jt400 } from './db.js'
 xdescribe('MessageQ', function () {
   let msgq
   beforeEach(async () => {

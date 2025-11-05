@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { jt400 } from './db'
+import { jt400 } from './db.js'
 
 describe('PGM', () => {
   it('should run rpg program', async () => {

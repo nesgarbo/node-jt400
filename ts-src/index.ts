@@ -1,17 +1,17 @@
-import { initJavaBridge } from './java'
-import { createConnection } from './lib/connection'
-import { Connection } from './lib/connection.types'
+import { initJavaBridge } from './java/index.js'
+import { createConnection } from './lib/connection.js'
+import { Connection } from './lib/connection.types.js'
 import {
   createInMemoryConnection,
-  InMemoryConnection,
-} from './lib/inMemoryConnection'
-import { createInsertListInOneStatment } from './lib/insertList'
-import { createDefaultLogger, Logger } from './lib/logger'
+  type InMemoryConnection,
+} from './lib/inMemoryConnection.js'
+import { createInsertListInOneStatment } from './lib/insertList.js'
+import { createDefaultLogger, type Logger } from './lib/logger.js'
 
-export * from './lib/baseConnection.types'
-export * from './lib/connection.types'
-export * from './lib/ifs/types'
-export { InMemoryConnection, Logger }
+export * from './lib/baseConnection.types.js'
+export * from './lib/connection.types.js'
+export * from './lib/ifs/types.js'
+export type { InMemoryConnection, Logger }
 
 const defaultConfig = {
   host: process.env.AS400_HOST,
