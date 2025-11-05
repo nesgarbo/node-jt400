@@ -33,7 +33,9 @@
     "format": "prettier --write ./ts-src/**/*.ts",
     "lint": "eslint ts-src/**/*.ts",
     "test": "mocha -r source-map-support/register --exit dist/esm/unit-test -t 1000",
+    "test-cjs": "mocha -r source-map-support/register --exit dist/cjs/unit-test -t 1000",
     "integration-test": "mocha -r source-map-support/register --exit dist/esm/integration-test -t 10000",
+    "integration-cjs-test": "mocha -r source-map-support/register --exit dist/cjs/integration-test -t 10000",
     "build": "npm run build:esm && npm run build:cjs",
     "build:esm": "tsc && tsc-esm-fix --target=dist/esm --ext=.js --dirnameVar=false --filenameVar=false",
     "build:cjs": "tsc -p tsconfig.cjs.json && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
@@ -43,7 +45,7 @@
     "test-dev": "mocha dist/esm/unit-test --watch",
     "build-all": "npm run build && npm run build-java",
     "build-java": "ant archive -buildfile ./java",
-    "ci": "npm run clean && npm run build && npm run test && npm run integration-test"
+    "ci": "npm run clean && npm run build && npm run test && npm run test-cjs && npm run integration-test && npm run integration-cjs-test && npm run test-compatibility"
   },
   "keywords": [
     "typescript",
