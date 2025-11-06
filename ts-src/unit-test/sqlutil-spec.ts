@@ -1,4 +1,4 @@
-import { toInsertSql } from '../lib/sqlutil'
+import { toInsertSql } from '../lib/sqlutil.js'
 import assert from 'assert'
 
 describe('sql helpers', () => {

@@ -1,9 +1,9 @@
 import { basename, dirname } from 'path'
-import { BufferToJavaType, JavaTypeToBuffer } from '../../java'
-import { JT400 } from '../../java/JT400'
-import { IfsReadStream } from './read_stream'
-import { Ifs } from './types'
-import { IfsWriteStream } from './write_stream'
+import { BufferToJavaType, JavaTypeToBuffer } from '../../java/index.js'
+import { JT400 } from '../../java/JT400.js'
+import { IfsReadStream } from './read_stream.js'
+import { Ifs } from './types.js'
+import { IfsWriteStream } from './write_stream.js'
 
 export function ifs(
   connection: JT400,

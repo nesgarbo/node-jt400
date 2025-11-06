@@ -1,5 +1,5 @@
-import { BufferToJavaType } from '../../java'
-import { IfsWriteStream as IfsWriteStreamType } from '../../java/JT400'
+import { BufferToJavaType } from '../../java/index.js'
+import { IfsWriteStream as IfsWriteStreamType } from '../../java/JT400.js'
 import util from 'util'
 import FlushWritable from 'flushwritable'
 

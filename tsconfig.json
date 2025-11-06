@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "module": "ES2022",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": false,
         "ignoreDeprecations": "5.0",
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
@@ -14,13 +15,14 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceRoot": "./ts-src",
-        "outDir": "dist/esm",
+        "outDir": "dist-esm",
         "sourceMap": true
     },
     "exclude": [
         "node_modules",
         "java",
-        "dist"
+        "dist-esm",
+        "dist-cjs"
     ],
     "compileOnSave": true
 }

@@ -1,2 +1,4 @@
-dist/integration-test
-dist/unit-test
+dist-esm/integration-test
+dist-cjs/integration-test
+dist-esm/unit-test
+dist-cjs/unit-test

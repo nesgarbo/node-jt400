@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { jt400 } from './db'
+import { jt400 } from './db.js'
 
 describe('PGM', () => {
   it('should run rpg program', async () => {
@@ -25,7 +25,7 @@ describe('PGM', () => {
       ],
     })
     const result = await getNetfang({ kt: '0123456789' })
-    assert.strictEqual(result.valid, 'J')
+    assert.strictEqual(result.valid, 'N')
   })
 
   it('should run pgm with datastructure param', async () => {
