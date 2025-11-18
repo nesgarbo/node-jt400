@@ -1,37 +1,39 @@
 import util = require('util')
 import { Readable } from 'stream'
-import { JavaTypeToBuffer } from '../../java'
 import { IfsReadStream as IfsReadStreamType } from '../../java/JT400'
 
-export function IfsReadStream(opt: {
+type Opt = {
   ifsReadStream: Promise<IfsReadStreamType>
-  javaTypeToBuffer: JavaTypeToBuffer
-}) {
-  Readable.call(this, {
-    objectMode: false,
-  })
+}
+
+export function IfsReadStream(opt: Opt) {
+  Readable.call(this, { objectMode: false })
   this._ifsReadStream = opt.ifsReadStream
-  this._javaTypeToBuffer = opt.javaTypeToBuffer
-  this._buffer = []
 }
 
 util.inherits(IfsReadStream, Readable)
 
 IfsReadStream.prototype._read = function () {
-  const _this = this
   const streamPromise: Promise<IfsReadStreamType> = this._ifsReadStream
   streamPromise
-    .then((stream) => {
-      stream
-        .read()
-        .then((res) => {
-          this.push(this._javaTypeToBuffer(res))
-        })
-        .catch((err) => {
-          _this.emit('error', err)
-        })
-    })
-    .catch((err) => {
-      this.emit('error', err)
-    })
+    .then((stream) =>
+      stream.read().then((res: any) => {
+        // java-bridge convierte byte[] -> Buffer automáticamente
+        if (res == null) {
+          this.push(null) // EOF
+          return
+        }
+
+        const buf =
+          Buffer.isBuffer(res) ? res : res instanceof Uint8Array ? Buffer.from(res) : Buffer.from(res as any)
+
+        if (buf.length === 0) {
+          this.push(null) // EOF defensivo si llega vacío
+          return
+        }
+
+        this.push(buf)
+      }),
+    )
+    .catch((err: any) => this.emit('error', err))
 }

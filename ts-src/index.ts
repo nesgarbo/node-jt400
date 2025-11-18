@@ -33,8 +33,6 @@ export function pool(config = {}, options: JT400Options = {}): Connection {
   return createConnection({
     connection: javaCon,
     insertListFun: createInsertListInOneStatment,
-    bufferToJavaType: javaBridge.bufferToJavaType,
-    javaTypeToBuffer: javaBridge.javaTypeToBuffer,
     logger: options.logger || createDefaultLogger(),
     inMemory: false,
   })
@@ -49,8 +47,6 @@ export async function connect(
   return createConnection({
     connection: javaCon,
     insertListFun: createInsertListInOneStatment,
-    bufferToJavaType: javaBridge.bufferToJavaType,
-    javaTypeToBuffer: javaBridge.javaTypeToBuffer,
     logger: options.logger || createDefaultLogger(),
     inMemory: false,
   })

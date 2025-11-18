@@ -15,7 +15,7 @@ describe('sql helpers', () => {
       },
     ]
     expect(toInsertSql('myTable', records)).to.equal(
-      'INSERT INTO myTable (foo, baz) VALUES(?, ?), (?, ?)'
+      'INSERT INTO myTable (foo, baz) VALUES(?, ?), (?, ?)',
     )
   })
 })

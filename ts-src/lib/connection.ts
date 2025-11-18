@@ -1,5 +1,4 @@
 import { deprecate } from 'util'
-import { BufferToJavaType, JavaTypeToBuffer } from '../java'
 import { JT400 } from '../java/JT400'
 import { createBaseConnection } from './baseConnection'
 import {
@@ -17,7 +16,7 @@ import { Logger } from './logger'
 import JSONStream = require('JSONStream')
 
 const isJustNameMessageQ = function (
-  opt: MessageQOptions
+  opt: MessageQOptions,
 ): opt is JustNameMessageQ {
   return (opt as JustNameMessageQ).name !== undefined
 }
@@ -25,15 +24,11 @@ const isJustNameMessageQ = function (
 export function createConnection({
   connection,
   insertListFun,
-  bufferToJavaType,
-  javaTypeToBuffer,
   inMemory,
   logger,
 }: {
   connection: JT400
   insertListFun: CreateInsertList
-  bufferToJavaType: BufferToJavaType
-  javaTypeToBuffer: JavaTypeToBuffer
   inMemory: boolean
   logger: Logger
 }): Connection {
@@ -41,7 +36,7 @@ export function createConnection({
     connection,
     insertListFun,
     logger,
-    inMemory
+    inMemory,
   )
   const jt400: Connection = {
     ...baseConnection,
@@ -51,7 +46,7 @@ export function createConnection({
         t,
         insertListFun,
         logger,
-        inMemory
+        inMemory,
       )
 
       try {
@@ -70,7 +65,7 @@ export function createConnection({
         jdbcStream: connection.getTablesAsStreamSync(
           opt.catalog,
           opt.schema,
-          opt.table || '%'
+          opt.table || '%',
         ),
       }).pipe(JSONStream.parse([true]))
     },
@@ -145,14 +140,14 @@ export function createConnection({
       }
     },
     ifs() {
-      return createIfs(connection, bufferToJavaType, javaTypeToBuffer)
+      return createIfs(connection)
     },
     defineProgram(opt: ProgramDefinitionOptions) {
       const pgm = connection.pgmSync(
         opt.programName,
         JSON.stringify(opt.paramsSchema),
         opt.libraryName || '*LIBL',
-        opt.ccsid
+        opt.ccsid,
       )
       return function run(params, timeout = 3) {
         return pgm

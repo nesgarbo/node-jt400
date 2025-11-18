@@ -52,7 +52,7 @@ describe('jt400 pool', () => {
 
   it('should trim values as default', async () => {
     const data: any = await connection.query(
-      'select * from tsttbl order by bar'
+      'select * from tsttbl order by bar',
     )
     expect(data.length).to.equal(2)
     expect(data[1].FOO).to.equal('bar2')
@@ -62,7 +62,7 @@ describe('jt400 pool', () => {
     const data: any = await connection.query(
       'select * from tsttbl',
       [],
-      {} as QueryOptions
+      {} as QueryOptions,
     )
     expect(data.length).to.equal(2)
     expect(data[1].FOO).to.equal('bar2')
@@ -75,7 +75,7 @@ describe('jt400 pool', () => {
       [],
       {
         trim,
-      }
+      },
     )
     expect(data.length).to.equal(2)
     expect(data[1].FOO).to.equal('bar2')
@@ -87,7 +87,7 @@ describe('jt400 pool', () => {
       [],
       {
         trim: false,
-      }
+      },
     )
     expect(data.length).to.equal(2)
     expect(data[1].FOO).to.equal('bar2     ')
@@ -102,7 +102,7 @@ describe('jt400 pool', () => {
 
   it('should execute update', async () => {
     const nUpdated = await connection.update(
-      "update tsttbl set foo='bar3' where foo='bar'"
+      "update tsttbl set foo='bar3' where foo='bar'",
     )
     expect(nUpdated).to.equal(1)
   })
@@ -110,7 +110,7 @@ describe('jt400 pool', () => {
   it('should execute update with parameters', async () => {
     const nUpdated = await connection.update(
       'update tsttbl set foo=? where testtblid=?',
-      ['ble', 0]
+      ['ble', 0],
     )
     expect(nUpdated).to.equal(0)
   })
@@ -126,7 +126,7 @@ describe('jt400 pool', () => {
       .then(() => {
         return connection.query<any>(
           'select fra, timi from tsttbl where foo=?',
-          ['bar']
+          ['bar'],
         )
       })
       .then((res) => {
@@ -137,7 +137,7 @@ describe('jt400 pool', () => {
 
   it('should insert clob', async () => {
     const largeText = readFileSync(
-      __dirname + '/../../test-data/clob.txt'
+      __dirname + '/../../test-data/clob.txt',
     ).toString()
     await connection.update('update tsttbl set clob=?', [
       { type: 'CLOB', value: largeText },
@@ -186,7 +186,7 @@ describe('jt400 pool', () => {
       })
       .catch((error) => {
         expect(error.message).to.equal(
-          '[SQL0104] Token TESTTABLE was not valid. Valid tokens: : <INTEGER>.'
+          '[SQL0104] Token TESTTABLE was not valid. Valid tokens: : <INTEGER>.',
         )
         expect(error.cause.stack).to.include('JdbcJsonClient.insertAndGetId')
         expect(error.context.sql).to.equal(sql)
@@ -204,7 +204,7 @@ describe('jt400 pool', () => {
       })
       .catch((error) => {
         expect(error.message).to.equal(
-          '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.'
+          '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.',
         )
         expect(error.context.sql).to.equal(sql)
         expect(error.context.params).to.deep.equal([])

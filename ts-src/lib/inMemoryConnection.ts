@@ -10,14 +10,12 @@ export interface InMemoryConnection extends Connection {
 
 export function createInMemoryConnection(
   jt400Factory: JavaBridge,
-  logger: Logger
+  logger: Logger,
 ): InMemoryConnection {
   const javaCon = jt400Factory.createInMemoryConnection()
   const instance = createConnection({
     connection: javaCon,
     insertListFun: createStandardInsertList,
-    bufferToJavaType: jt400Factory.bufferToJavaType,
-    javaTypeToBuffer: jt400Factory.javaTypeToBuffer,
     logger,
     inMemory: true,
   })

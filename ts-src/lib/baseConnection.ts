@@ -22,7 +22,7 @@ export const createBaseConnection = function (
   jdbcConnection: JDBCConnection,
   insertListFun: CreateInsertList,
   logger: Logger,
-  inMemory: boolean
+  inMemory: boolean,
 ): BaseConnection {
   const baseConnection: BaseConnection = {
     query(sql, params = [], options) {
@@ -32,7 +32,7 @@ export const createBaseConnection = function (
       const trim = options && options.trim !== undefined ? options.trim : true
       logger.debug(
         { sql, state: 'starting', parameterCount: params.length },
-        'Executing IBMI DB query'
+        'Executing IBMI DB query',
       )
       const startTime = process.hrtime.bigint()
       return jdbcConnection
@@ -47,7 +47,7 @@ export const createBaseConnection = function (
               parameterCount: params.length,
               resultSize: result.length,
             },
-            'IBMI DB query executed'
+            'IBMI DB query executed',
           )
           return result
         })
@@ -58,7 +58,7 @@ export const createBaseConnection = function (
       const jsonParams = paramsToJson(params)
       logger.debug(
         { sql, state: 'starting', parameterCount: params.length },
-        'Executing IBMI DB query as stream'
+        'Executing IBMI DB query as stream',
       )
       const startTime = process.hrtime.bigint()
       const stream = new JdbcStream({
@@ -74,7 +74,7 @@ export const createBaseConnection = function (
             duration: Number(process.hrtime.bigint() - startTime),
             parameterCount: params.length,
           },
-          'IBMI DB query as stream ended'
+          'IBMI DB query as stream ended',
         )
       })
       return stream
@@ -84,7 +84,7 @@ export const createBaseConnection = function (
       const jsonParams = paramsToJson(params)
       logger.debug(
         { sql, state: 'starting', parameterCount: params.length },
-        'Executing IBMI DB sql statement'
+        'Executing IBMI DB sql statement',
       )
       return jdbcConnection
         .execute(sql, jsonParams)
@@ -112,7 +112,7 @@ export const createBaseConnection = function (
                       parameterCount: params.length,
                       resultSize: result.length,
                     },
-                    'IBMI DB query executed'
+                    'IBMI DB query executed',
                   )
                   return result
                 })
@@ -131,7 +131,7 @@ export const createBaseConnection = function (
                     duration: Number(process.hrtime.bigint() - startTime),
                     parameterCount: params.length,
                   },
-                  'IBMI DB query as stream ended'
+                  'IBMI DB query as stream ended',
                 )
               })
               return stream
@@ -148,7 +148,7 @@ export const createBaseConnection = function (
                   const transformArrayToObject = arrayToObject(metadata)
                   stream = new JdbcStream({
                     jdbcStream: statement.asStreamSync(
-                      options.bufferSize || 100
+                      options.bufferSize || 100,
                     ),
                   })
                   stream.on('end', () => {
@@ -159,7 +159,7 @@ export const createBaseConnection = function (
                         duration: Number(process.hrtime.bigint() - startTime),
                         parameterCount: params.length,
                       },
-                      'IBMI DB query as object stream ended'
+                      'IBMI DB query as object stream ended',
                     )
                   })
 
@@ -183,11 +183,11 @@ export const createBaseConnection = function (
                                 sql,
                                 state: 'finished',
                                 duration: Number(
-                                  process.hrtime.bigint() - startTime
+                                  process.hrtime.bigint() - startTime,
                                 ),
                                 parameterCount: jsonParams.length,
                               },
-                              'IBMI DB query as iterable executed'
+                              'IBMI DB query as iterable executed',
                             )
                           }
                           return {
@@ -219,7 +219,7 @@ export const createBaseConnection = function (
       const jsonParams = paramsToJson(params)
       logger.info(
         { sql, state: 'starting', parameterCount: params.length },
-        'Executing IBMI DB update'
+        'Executing IBMI DB update',
       )
       const startTime = process.hrtime.bigint()
       return jdbcConnection
@@ -233,7 +233,7 @@ export const createBaseConnection = function (
               parameterCount: params.length,
               result: result,
             },
-            'IBMI DB update executed'
+            'IBMI DB update executed',
           )
           return result
         })
@@ -246,7 +246,7 @@ export const createBaseConnection = function (
       const stream = createJdbcWriteStream(
         baseConnection.batchUpdate,
         sql,
-        options && options.bufferSize
+        options && options.bufferSize,
       )
       stream.on('finish', () => {
         logger.info(
@@ -255,7 +255,7 @@ export const createBaseConnection = function (
             state: 'finished',
             duration: Number(process.hrtime.bigint() - startTime),
           },
-          'IBMI DB write stream ended'
+          'IBMI DB write stream ended',
         )
       })
       return stream
@@ -269,7 +269,7 @@ export const createBaseConnection = function (
       const jsonParams = JSON.stringify(params)
       logger.info(
         { sql, state: 'starting', parameterCount: params.length },
-        'Executing IBMI DB batch update'
+        'Executing IBMI DB batch update',
       )
       const startTime = process.hrtime.bigint()
       return jdbcConnection
@@ -284,7 +284,7 @@ export const createBaseConnection = function (
               parameterCount: params.length,
               result: result,
             },
-            'IBMI DB batch update executed'
+            'IBMI DB batch update executed',
           )
           return result
         })
@@ -295,7 +295,7 @@ export const createBaseConnection = function (
       const jsonParams = paramsToJson(params)
       logger.info(
         { sql, state: 'starting', parameterCount: params.length },
-        'Executing IBMI DB insert and get id'
+        'Executing IBMI DB insert and get id',
       )
       const startTime = process.hrtime.bigint()
       return jdbcConnection
@@ -308,7 +308,7 @@ export const createBaseConnection = function (
               duration: Number(process.hrtime.bigint() - startTime),
               parameterCount: params.length,
             },
-            'IBMI DB insert and get id executed'
+            'IBMI DB insert and get id executed',
           )
           return result
         })

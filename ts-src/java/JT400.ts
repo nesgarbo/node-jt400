@@ -24,20 +24,20 @@ export interface JDBCConnection {
   queryAsStream: (
     sql: string,
     jsonParams: string,
-    bufferSize: number
+    bufferSize: number,
   ) => Promise<ResultStream>
 
   execute: (sql: string, jsonParams: string) => Promise<StatementWrap>
   getTablesAsStreamSync: (
     catalog: string,
     schema: string,
-    tableName: string
+    tableName: string,
   ) => TablesReadStream
   getColumns: (
     catalog: string,
     schema: string,
     tableNamePattern: string,
-    columnNamePattern: string
+    columnNamePattern: string,
   ) => Promise<string>
   update: (sql: string, jsonParams: string) => Promise<number>
   batchUpdate: (sql: string, jsonParams: string) => Promise<number[]>
@@ -69,7 +69,7 @@ export interface KeyedDataQ {
   readResponse: (
     key: string,
     wait: number,
-    writeKeyLength: number
+    writeKeyLength: number,
   ) => Promise<KeyedDataQueueResponse>
   write: (key: string, data: string) => Promise<void>
 }
@@ -96,13 +96,13 @@ export interface JT400 extends JDBCConnection {
   getPrimaryKeys: (
     catalog: string,
     schema: string,
-    table: string
+    table: string,
   ) => Promise<string>
   pgmSync: (
     programName: string,
     paramsSchemaJsonStr: string,
     libraryName?: string,
-    ccsid?: number
+    ccsid?: number,
   ) => Pgm
   openMessageQ: (name: string, isPath: boolean) => Promise<MessageQ>
   createKeyedDataQSync: (name: string) => KeyedDataQ
@@ -112,7 +112,7 @@ export interface JT400 extends JDBCConnection {
     folderPath: string,
     fileName: string,
     append: boolean,
-    ccsid?: number
+    ccsid?: number,
   ) => Promise<IfsWriteStream>
   listIfsFiles: (folderName: string) => Promise<string[]>
   moveIfsFile: (fileName: string, newFileName: string) => Promise<boolean>
