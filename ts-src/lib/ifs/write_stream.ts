@@ -1,4 +1,3 @@
-import { BufferToJavaType } from '../../java/index.js'
 import { IfsWriteStream as IfsWriteStreamType } from '../../java/JT400.js'
 import util from 'util'
 import FlushWritable from 'flushwritable'
@@ -17,7 +16,7 @@ util.inherits(IfsWriteStream, FlushWritable)
 IfsWriteStream.prototype._write = function (
   chunk: Buffer,
   _: any,
-  next: (err?: any) => void
+  next: (err?: any) => void,
 ) {
   const writeStream: Promise<IfsWriteStreamType> = this._ifsWriteStream
   writeStream
