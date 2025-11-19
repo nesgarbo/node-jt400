@@ -69,7 +69,7 @@ describe('hsql in memory', () => {
       stream.on('error', (err) => {
         try {
           expect(err.message).to.equal(
-            'Invalid argument in JDBC call: parameter index out of range: 1',
+            'Argumento incorrecto en una llamada JDBC: parameter index out of range: 1',
           )
           done()
         } catch (e) {
@@ -171,7 +171,7 @@ describe('hsql in memory', () => {
         })
         .catch((error) => {
           expect(error.message).to.equal(
-            'data exception: invalid datetime format',
+            'excepción de datos: formato fecha/hora incorrecto',
           )
           expect(error.cause.stack).to.include('JdbcJsonClient.setParams')
           expect(error.context.sql).to.equal(sql)

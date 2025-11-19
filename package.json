@@ -1,7 +1,7 @@
 {
   "name": "@nesgarbo/node-jt400",
   "author": "Néstor García Bou <nesgarbo@icloud.com>",
-  "version": "5.4.2",
+  "version": "5.4.3",
   "description": "JT400 (IBM Toolbox) for NodeJS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
