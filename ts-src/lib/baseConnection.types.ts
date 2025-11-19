@@ -24,6 +24,7 @@ export interface Metadata {
   scale: number
 }
 export interface Statement {
+  prepare: (sql: string) => Promise<void>
   isQuery: () => boolean
   metadata: () => Promise<Metadata[]>
   asArray: () => Promise<string[][]>
@@ -34,11 +35,14 @@ export interface Statement {
   close: Close
 }
 export type Execute = (sql: string, params?: Param[]) => Promise<Statement>
-export type Query = <T>(
-  sql: string,
-  params?: Param[],
-  options?: QueryOptions,
-) => Promise<T[]>
+export type Query = {
+  <T>(
+    sql: string,
+    params?: Param[] | undefined,
+    options?: QueryOptions,
+    callback?: (error: any, cursor: any) => void,
+  ): Promise<T[]>
+}
 export type Update = (sql: string, params?: Param[]) => Promise<number>
 export type CreateReadStream = (sql: string, params?: Param[]) => Readable
 export type InsertAndGetId = (sql: string, params?: Param[]) => Promise<number>
@@ -68,4 +72,8 @@ export interface BaseConnection {
   createWriteStream: CreateWriteStream
   batchUpdate: BatchUpdate
   execute: Execute
+
+  commit: () => Promise<void>
+  rollback: () => Promise<void>
+  createStatement: () => Promise<Statement>
 }

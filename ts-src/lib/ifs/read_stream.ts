@@ -1,6 +1,6 @@
 import util from 'util'
 import { Readable } from 'stream'
-import { IfsReadStream as IfsReadStreamType } from '../../java/JT400'
+import { IfsReadStream as IfsReadStreamType } from '../../java/JT400.js'
 
 type Opt = {
   ifsReadStream: Promise<IfsReadStreamType>

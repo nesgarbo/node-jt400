@@ -1,7 +1,7 @@
 // src/common/libs/jt400/javaBridge.ts
-import { appendClasspath, ensureJvm, importClass } from 'java-bridge'
+import java from 'java-bridge'
 import { join as joinPath } from 'path'
-import type { JT400 } from './JT400'
+import type { JT400 } from './JT400.js'
 
 export interface JavaBridge {
   createConnection: (config: string) => Promise<JT400>
@@ -12,7 +12,7 @@ export interface JavaBridge {
 export const initJavaBridge = (): JavaBridge => {
   const JAR_DIR = joinPath(__dirname, '/../../java/lib')
 
-  appendClasspath([
+  java.appendClasspath([
     joinPath(JAR_DIR, 'jt400.jar'),
     joinPath(JAR_DIR, 'jt400wrap.jar'),
     joinPath(JAR_DIR, 'json-simple-1.1.1.jar'),
@@ -20,7 +20,7 @@ export const initJavaBridge = (): JavaBridge => {
   ])
 
   // Opciones JVM (esto te funcionó)
-  ensureJvm({
+  java.ensureJvm({
     opts: [
       '-Xrs',
       '-Dcom.ibm.as400.access.AS400.guiAvailable=false',
@@ -29,8 +29,8 @@ export const initJavaBridge = (): JavaBridge => {
   })
 
   // Clases del wrapper Java
-  const JT400Class: any = importClass('nodejt400.JT400')
-  const HsqlClientClass: any = importClass('nodejt400.HsqlClient')
+  const JT400Class = java.importClass('nodejt400.JT400')
+  const HsqlClientClass = java.importClass('nodejt400.HsqlClient')
 
   return {
     createConnection: (config: string) =>
@@ -39,7 +39,7 @@ export const initJavaBridge = (): JavaBridge => {
     createInMemoryConnection: () => {
       // En java-bridge se instancia con `new`
       const instance = new HsqlClientClass()
-      return instance as JT400
+      return instance as unknown as JT400
     },
   }
 }

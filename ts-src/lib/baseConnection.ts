@@ -25,6 +25,74 @@ export const createBaseConnection = function (
   inMemory: boolean,
 ): BaseConnection {
   const baseConnection: BaseConnection = {
+    async commit() {
+      return jdbcConnection.commit().catch((err) => {
+        throw handleError({})(err)
+      })
+    },
+    async rollback() {
+      return jdbcConnection.rollback().catch((err) => {
+        throw handleError({})(err)
+      })
+    },
+    async createStatement() {
+      if (!jdbcConnection.createStatement) {
+        throw new Error(
+          'createStatement is not supported by this JDBCConnection',
+        )
+      }
+
+      return jdbcConnection.createStatement().then((st) => {
+        return {
+          prepare(sql: string) {
+            return st.prepare(sql)
+          },
+          isQuery() {
+            return st.isQuerySync()
+          },
+          async metadata() {
+            return st.getMetaData().then(JSON.parse)
+          },
+          async asArray() {
+            return st.asArray().then(JSON.parse)
+          },
+          asIterable() {
+            return {
+              [Symbol.asyncIterator]: async function * () {
+                while (true) {
+                  const row = await st.next().then(JSON.parse)
+                  if (!row) break
+                  yield row
+                }
+              },
+            }
+          },
+          asStream(options) {
+            return new JdbcStream({
+              jdbcStream: st.asStreamSync(options?.bufferSize ?? 100),
+            })
+          },
+          asObjectStream(options) {
+            return st
+              .getMetaData()
+              .then(JSON.parse)
+              .then((metadata) => {
+                const transform = arrayToObject(metadata)
+                const stream = new JdbcStream({
+                  jdbcStream: st.asStreamSync(options?.bufferSize ?? 100),
+                })
+                return stream.pipe(parse('*')).pipe(transform)
+              })
+          },
+          updated() {
+            return st.updated()
+          },
+          close() {
+            return st.close()
+          },
+        }
+      })
+    },
     query(sql, params = [], options) {
       const jsonParams = paramsToJson(params)
 
@@ -86,12 +154,17 @@ export const createBaseConnection = function (
         { sql, state: 'starting', parameterCount: params.length },
         'Executing IBMI DB sql statement',
       )
+
       return jdbcConnection
         .execute(sql, jsonParams)
         .then((statement) => {
           const isQuery = statement.isQuerySync()
           let stream
+
           const stWrap = {
+            prepare(prepSql: string) {
+              return statement.prepare(prepSql)
+            },
             isQuery() {
               return isQuery
             },
@@ -205,12 +278,12 @@ export const createBaseConnection = function (
             },
             close() {
               if (stream) {
-                stream.close()
-              } else {
-                return statement.close()
+                return stream.close()
               }
+              return statement.close()
             },
           }
+
           return stWrap
         })
         .catch(handleError({ sql, params }))

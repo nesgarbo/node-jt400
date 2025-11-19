@@ -69,7 +69,7 @@ describe('hsql in memory', () => {
         try {
           assert.strictEqual(
             err.message,
-            'Invalid argument in JDBC call: parameter index out of range: 1',
+            'Argumento incorrecto en una llamada JDBC: parameter index out of range: 1',
           )
           done()
         } catch (e) {
@@ -172,7 +172,7 @@ describe('hsql in memory', () => {
         .catch((error) => {
           assert.strictEqual(
             error.message,
-            'data exception: invalid datetime format',
+            'excepción de datos: formato fecha/hora incorrecto',
           )
           assert.ok(error.cause.stack.includes('JdbcJsonClient.setParams'))
           assert.strictEqual(error.context.sql, sql)

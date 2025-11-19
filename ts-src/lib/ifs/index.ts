@@ -1,8 +1,8 @@
 import { basename, dirname } from 'path'
 import { JT400 } from '../../java/JT400'
-import { IfsReadStream } from './read_stream'
+import { IfsReadStream } from './read_stream.js'
 import { Ifs } from './types'
-import { IfsWriteStream } from './write_stream'
+import { IfsWriteStream } from './write_stream.js'
 
 export function ifs(
   connection: JT400,
@@ -13,7 +13,7 @@ export function ifs(
         return connection.createIfsReadStream(file)
       })
       return new IfsReadStream({
-        ifsReadStream: javaStream
+        ifsReadStream: javaStream,
       })
     },
     createWriteStream: function (
@@ -31,7 +31,7 @@ export function ifs(
         )
       })
       return new IfsWriteStream({
-        ifsWriteStream: javaStream
+        ifsWriteStream: javaStream,
       })
     },
     listFiles: async (folderName: string) => {

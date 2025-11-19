@@ -4,6 +4,7 @@ export interface ResultStream {
 }
 
 export interface StatementWrap {
+  prepare: (sql: string) => Promise<void>
   isQuerySync: () => boolean
   close: () => Promise<void>
   updated: () => Promise<number>
@@ -42,6 +43,29 @@ export interface JDBCConnection {
   update: (sql: string, jsonParams: string) => Promise<number>
   batchUpdate: (sql: string, jsonParams: string) => Promise<number[]>
   insertAndGetId: (sql: string, jsonParams: string) => Promise<number>
+   // ----- NUEVOS PARA COMPATIBILIDAD ODBC -----
+
+  /** Ejecuta commit en este JDBC Connection */
+  commit: () => Promise<void>
+
+  /** Ejecuta rollback en este JDBC Connection */
+  rollback: () => Promise<void>
+
+  /** Crea un PreparedStatement */
+  createStatement: () => Promise<StatementWrap>
+
+  /** Devuelve un CursorWrap (modo ODBC con callback) */
+  queryAsCursor: (
+    sql: string,
+    jsonParams: string,
+    fetchSize: number,
+    trim: boolean
+  ) => Promise<CursorWrap>
+}
+
+export interface CursorWrap {
+  next: () => Promise<string>// JSON de una fila
+  close: () => Promise<void>
 }
 
 export interface Transaction extends JDBCConnection {

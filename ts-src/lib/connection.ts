@@ -1,6 +1,6 @@
 import { deprecate } from 'util'
-import { JT400 } from '../java/JT400'
-import { createBaseConnection } from './baseConnection'
+import { JT400 } from '../java/JT400.js'
+import { createBaseConnection } from './baseConnection.js'
 import {
   Connection,
   JustNameMessageQ,
