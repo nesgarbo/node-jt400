@@ -1,5 +1,5 @@
-import { BaseConnection, InsertList } from './baseConnection.types'
-import { toInsertSql } from './sqlutil'
+import { BaseConnection, InsertList } from './baseConnection.types.js'
+import { toInsertSql } from './sqlutil.js'
 
 export type CreateInsertList = (connection: BaseConnection) => InsertList
 export const createInsertListInOneStatment: CreateInsertList =

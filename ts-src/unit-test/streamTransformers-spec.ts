@@ -1,7 +1,7 @@
 import { Readable } from 'stream'
-import { arrayToObject } from '../lib/streamTransformers'
+import { arrayToObject } from '../lib/streamTransformers.js'
 import { parse } from 'JSONStream'
-import { expect } from 'chai'
+import assert from 'assert'
 
 describe('streamTransformers', () => {
   describe('arrayToObject', () => {
@@ -36,7 +36,7 @@ describe('streamTransformers', () => {
       })
 
       objectStream.on('end', () => {
-        expect(results).to.deep.equal([
+        assert.deepStrictEqual(results, [
           { id: 1, name: 'Jón' },
           { id: 2, name: 'Gunna' },
         ])
@@ -70,7 +70,7 @@ describe('streamTransformers', () => {
 
       objectStream.on('error', (err) => {
         try {
-          expect(err.message).to.equal('Expected an array chunk as input')
+          assert.strictEqual(err.message, 'Expected an array chunk as input')
           done()
         } catch (e) {
           done(e)
@@ -105,7 +105,8 @@ describe('streamTransformers', () => {
 
       objectStream.on('error', (err) => {
         try {
-          expect(err.message).to.equal(
+          assert.strictEqual(
+            err.message,
             'Array chunk length 3 does not match columns length 2',
           )
           done()

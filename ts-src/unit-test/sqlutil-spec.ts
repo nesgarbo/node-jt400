@@ -1,6 +1,5 @@
-'use strict'
-import { toInsertSql } from '../lib/sqlutil'
-import { expect } from 'chai'
+import { toInsertSql } from '../lib/sqlutil.js'
+import assert from 'assert'
 
 describe('sql helpers', () => {
   it('should create sql statement', () => {
@@ -14,7 +13,8 @@ describe('sql helpers', () => {
         baz: 456,
       },
     ]
-    expect(toInsertSql('myTable', records)).to.equal(
+    assert.strictEqual(
+      toInsertSql('myTable', records),
       'INSERT INTO myTable (foo, baz) VALUES(?, ?), (?, ?)',
     )
   })

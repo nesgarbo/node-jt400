@@ -1,7 +1,10 @@
-import { expect } from 'chai'
+import assert from 'assert'
 import { readFileSync } from 'fs'
-import { pool, QueryOptions } from '..'
-import { jt400 as connection } from './db'
+import { pool, QueryOptions } from '../index.js'
+import { jt400 as connection } from './db.js'
+import { join } from 'path'
+
+const currentDir = __dirname
 
 describe('jt400 pool', () => {
   let idList
@@ -20,11 +23,11 @@ describe('jt400 pool', () => {
   })
 
   it('should not be in memory', () => {
-    expect(connection.isInMemory()).to.equal(false)
+    assert.strictEqual(connection.isInMemory(), false)
   })
 
   it('should not return same instance in configure', () => {
-    expect(connection).to.not.equal(pool({ host: 'foo' }))
+    assert.notStrictEqual(connection, pool({ host: 'foo' }))
   })
 
   it('should configure host', () => {
@@ -35,27 +38,27 @@ describe('jt400 pool', () => {
         throw new Error('should not return result from nohost')
       })
       .catch((err) => {
-        expect(err.message).to.include('nohost')
-        expect(err.category).to.equal('OperationalError')
+        assert.ok(err.message.includes('nohost'))
+        assert.strictEqual(err.category, 'OperationalError')
       })
   }).timeout(20000)
 
   it('should insert records', () => {
-    expect(idList.length).to.equal(2)
-    expect(Number(idList[0])).to.be.above(1)
+    assert.strictEqual(idList.length, 2)
+    assert.ok(Number(idList[0]) > 1)
   })
 
   it('should execute query', async () => {
     const data = await connection.query('select * from tsttbl')
-    expect(data.length).to.equal(2)
+    assert.strictEqual(data.length, 2)
   })
 
   it('should trim values as default', async () => {
     const data: any = await connection.query(
       'select * from tsttbl order by bar',
     )
-    expect(data.length).to.equal(2)
-    expect(data[1].FOO).to.equal('bar2')
+    assert.strictEqual(data.length, 2)
+    assert.strictEqual(data[1].FOO, 'bar2')
   })
 
   it('should trim values when options is empty', async () => {
@@ -64,8 +67,8 @@ describe('jt400 pool', () => {
       [],
       {} as QueryOptions,
     )
-    expect(data.length).to.equal(2)
-    expect(data[1].FOO).to.equal('bar2')
+    assert.strictEqual(data.length, 2)
+    assert.strictEqual(data[1].FOO, 'bar2')
   })
 
   it('should trim values when trim is undefined', async () => {
@@ -77,8 +80,8 @@ describe('jt400 pool', () => {
         trim,
       },
     )
-    expect(data.length).to.equal(2)
-    expect(data[1].FOO).to.equal('bar2')
+    assert.strictEqual(data.length, 2)
+    assert.strictEqual(data[1].FOO, 'bar2')
   })
 
   it('should not trim values when trim option is false', async () => {
@@ -89,22 +92,22 @@ describe('jt400 pool', () => {
         trim: false,
       },
     )
-    expect(data.length).to.equal(2)
-    expect(data[1].FOO).to.equal('bar2     ')
+    assert.strictEqual(data.length, 2)
+    assert.strictEqual(data[1].FOO, 'bar2     ')
   })
 
   it('should execute query with params', async () => {
     const data = await connection.query('select * from tsttbl where baz=?', [
       123.23,
     ])
-    expect(data.length).to.equal(1)
+    assert.strictEqual(data.length, 1)
   })
 
   it('should execute update', async () => {
     const nUpdated = await connection.update(
       "update tsttbl set foo='bar3' where foo='bar'",
     )
-    expect(nUpdated).to.equal(1)
+    assert.strictEqual(nUpdated, 1)
   })
 
   it('should execute update with parameters', async () => {
@@ -112,7 +115,7 @@ describe('jt400 pool', () => {
       'update tsttbl set foo=? where testtblid=?',
       ['ble', 0],
     )
-    expect(nUpdated).to.equal(0)
+    assert.strictEqual(nUpdated, 0)
   })
 
   it('should insert dates and timestamps', () => {
@@ -130,24 +133,24 @@ describe('jt400 pool', () => {
         )
       })
       .then((res) => {
-        expect(res[0].FRA).to.eql('2014-01-15')
-        expect(res[0].TIMI).to.eql('2014-01-16 15:32:05.000000')
+        assert.deepStrictEqual(res[0].FRA, '2014-01-15')
+        assert.deepStrictEqual(res[0].TIMI, '2014-01-16 15:32:05.000000')
       })
   })
 
   it('should insert clob', async () => {
     const largeText = readFileSync(
-      __dirname + '/../../test-data/clob.txt',
+      join(currentDir, '../../test-data/clob.txt'),
     ).toString()
     await connection.update('update tsttbl set clob=?', [
       { type: 'CLOB', value: largeText },
     ])
     const res: any = await connection.query('SELECT clob from tsttbl')
-    expect(res[0].CLOB.length).to.equal(largeText.length)
+    assert.strictEqual(res[0].CLOB.length, largeText.length)
   }).timeout(20000)
 
   it('should insert blob', async () => {
-    const image = readFileSync(__dirname + '/../../test-data/blob.png', {
+    const image = readFileSync(join(currentDir, '../../test-data/blob.png'), {
       encoding: 'base64',
     })
 
@@ -155,7 +158,7 @@ describe('jt400 pool', () => {
       { type: 'BLOB', value: image },
     ])
     const res: any = await connection.query('SELECT blob from tsttbl')
-    expect(res[0].BLOB.length).to.equal(image.length)
+    assert.strictEqual(res[0].BLOB.length, image.length)
   })
 
   it('should fail query with oops error', () => {
@@ -168,16 +171,16 @@ describe('jt400 pool', () => {
         throw new Error('wrong error')
       })
       .catch((error) => {
-        expect(error.message).to.equal('Descriptor index not valid.')
-        expect(error.cause.stack).to.include('JdbcJsonClient.setParams')
-        expect(error.context.sql).to.equal(sql)
-        expect(error.context.params).to.equal(params)
-        expect(error.category).to.equal('ProgrammerError')
+        assert.strictEqual(error.message, 'Descriptor index not valid.')
+        assert.ok(error.cause.stack.includes('JdbcJsonClient.setParams'))
+        assert.strictEqual(error.context.sql, sql)
+        assert.strictEqual(error.context.params, params)
+        assert.strictEqual(error.category, 'ProgrammerError')
       })
   })
 
   it('should fail insert with oops error', () => {
-    const sql = `insert into table testtable (foo) values (?)`
+    const sql = 'insert into table testtable (foo) values (?)'
     const params = [123.23, 'a']
     return connection
       .insertAndGetId(sql, params)
@@ -185,13 +188,14 @@ describe('jt400 pool', () => {
         throw new Error('wrong error')
       })
       .catch((error) => {
-        expect(error.message).to.equal(
+        assert.strictEqual(
+          error.message,
           '[SQL0104] Token TESTTABLE was not valid. Valid tokens: : <INTEGER>.',
         )
-        expect(error.cause.stack).to.include('JdbcJsonClient.insertAndGetId')
-        expect(error.context.sql).to.equal(sql)
-        expect(error.context.params).to.equal(params)
-        expect(error.category).to.equal('ProgrammerError')
+        assert.ok(error.cause.stack.includes('JdbcJsonClient.insertAndGetId'))
+        assert.strictEqual(error.context.sql, sql)
+        assert.strictEqual(error.context.params, params)
+        assert.strictEqual(error.category, 'ProgrammerError')
       })
   })
 
@@ -203,12 +207,13 @@ describe('jt400 pool', () => {
         throw new Error('wrong error')
       })
       .catch((error) => {
-        expect(error.message).to.equal(
+        assert.strictEqual(
+          error.message,
           '[SQL0104] Token - was not valid. Valid tokens: AS CL ID IN TO ASC END FOR KEY LAG LOG NEW OFF OLD OUT COPY DATA.',
         )
-        expect(error.context.sql).to.equal(sql)
-        expect(error.context.params).to.deep.equal([])
-        expect(error.category).to.equal('ProgrammerError')
+        assert.strictEqual(error.context.sql, sql)
+        assert.deepStrictEqual(error.context.params, [])
+        assert.strictEqual(error.category, 'ProgrammerError')
       })
   })
 
@@ -221,10 +226,10 @@ describe('jt400 pool', () => {
         throw new Error('wrong error')
       })
       .catch((error) => {
-        expect(error.message).to.equal('Descriptor index not valid.')
-        expect(error.context.sql).to.equal(sql)
-        expect(error.context.params).to.equal(params)
-        expect(error.category).to.equal('ProgrammerError')
+        assert.strictEqual(error.message, 'Descriptor index not valid.')
+        assert.strictEqual(error.context.sql, sql)
+        assert.strictEqual(error.context.params, params)
+        assert.strictEqual(error.category, 'ProgrammerError')
       })
   })
 })

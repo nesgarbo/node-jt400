@@ -7,13 +7,13 @@ import {
   MessageFileHandlerOptions,
   MessageQOptions,
   ProgramDefinitionOptions,
-} from './connection.types'
-import { handleError } from './handleError'
-import { ifs as createIfs } from './ifs'
-import { CreateInsertList } from './insertList'
-import { JdbcStream } from './jdbcstream'
-import { Logger } from './logger'
-import JSONStream = require('JSONStream')
+} from './connection.types.js'
+import { handleError } from './handleError.js'
+import { ifs as createIfs } from './ifs/index.js'
+import { CreateInsertList } from './insertList.js'
+import { JdbcStream } from './jdbcstream.js'
+import JSONStream from 'JSONStream'
+import { Logger } from './logger.js'
 
 const isJustNameMessageQ = function (
   opt: MessageQOptions,

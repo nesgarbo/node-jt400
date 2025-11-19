@@ -1,6 +1,7 @@
-import { IfsWriteStream as IfsWriteStreamType } from '../../java/JT400'
-import util = require('util')
-import FlushWritable = require('flushwritable')
+import { BufferToJavaType } from '../../java/index.js'
+import { IfsWriteStream as IfsWriteStreamType } from '../../java/JT400.js'
+import util from 'util'
+import FlushWritable from 'flushwritable'
 
 type Opt = {
   ifsWriteStream: Promise<IfsWriteStreamType>

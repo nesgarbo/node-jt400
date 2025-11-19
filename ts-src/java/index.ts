@@ -43,3 +43,34 @@ export const initJavaBridge = (): JavaBridge => {
     },
   }
 }
+
+// export const initNewJavaBridge = (): JavaBridge => {
+//   ensureJvm({
+//     // This option should not have any effect when not using electron or not having the application packaged.
+//     // https://github.com/MarkusJx/node-java-bridge?tab=readme-ov-file#notes-on-electron
+//     isPackagedElectron: true,
+
+//     opts: [
+//       '-Xrs',
+//       '-Dcom.ibm.as400.access.AS400.guiAvailable=false', // Removes gui prompts
+//     ],
+//   })
+//   appendClasspath(
+//     ['jt400.jar', 'jt400wrap.jar', 'json-simple-1.1.1.jar', 'hsqldb.jar'].map(
+//       (jar) => joinPath(currentDir, '/../../java/lib/', jar)
+//     )
+//   )
+
+//   const JT400Class = importClass('nodejt400.JT400')
+//   return {
+//     createConnection: (config: string) => JT400Class.createConnection(config),
+//     createInMemoryConnection: () => {
+//       const HsqlClientClass = importClass('nodejt400.HsqlClient')
+//       const instance: any = new HsqlClientClass()
+//       return instance
+//     },
+//     createPool: (config: string) => JT400Class.createPoolSync(config),
+//     bufferToJavaType: (buffer: Buffer) => buffer,
+//     javaTypeToBuffer: (javaType: any) => javaType,
+//   }
+// }

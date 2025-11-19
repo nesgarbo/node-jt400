@@ -18,7 +18,7 @@ export function ifs(
     },
     createWriteStream: function (
       fileName: string | Promise<string>,
-      options: { append: boolean; ccsid?: number } = { append: false }
+      options: { append: boolean; ccsid?: number } = { append: false },
     ) {
       const javaStream = Promise.resolve(fileName).then(function (file) {
         const folderPath = dirname(file)
@@ -27,7 +27,7 @@ export function ifs(
           folderPath,
           fileName,
           options.append,
-          options.ccsid
+          options.ccsid,
         )
       })
       return new IfsWriteStream({

@@ -1,5 +1,5 @@
-import { expect } from 'chai'
-import { jt400 } from './db'
+import assert from 'assert'
+import { jt400 } from './db.js'
 xdescribe('MessageQ', function () {
   let msgq
   beforeEach(async () => {
@@ -15,12 +15,12 @@ xdescribe('MessageQ', function () {
       }
     }
 
-    readnext()
+    await readnext()
   })
 
   it('should open a message queue and write/read a message.', async () => {
     const testMessage = 'Test Message'
     await msgq.sendInformational(testMessage)
-    expect(await msgq.read()).to.equal(testMessage)
+    assert.strictEqual(await msgq.read(), testMessage)
   }).timeout(5000)
 })

@@ -1,17 +1,17 @@
-import { initJavaBridge } from './java'
-import { createConnection } from './lib/connection'
-import { Connection } from './lib/connection.types'
+import { initJavaBridge } from './java/index.js'
+import { createConnection } from './lib/connection.js'
+import { Connection } from './lib/connection.types.js'
 import {
   createInMemoryConnection,
-  InMemoryConnection,
-} from './lib/inMemoryConnection'
-import { createInsertListInOneStatment } from './lib/insertList'
-import { createDefaultLogger, Logger } from './lib/logger'
+  type InMemoryConnection,
+} from './lib/inMemoryConnection.js'
+import { createInsertListInOneStatment } from './lib/insertList.js'
+import { createDefaultLogger, type Logger } from './lib/logger.js'
 
-export * from './lib/baseConnection.types'
-export * from './lib/connection.types'
-export * from './lib/ifs/types'
-export { InMemoryConnection, Logger }
+export * from './lib/baseConnection.types.js'
+export * from './lib/connection.types.js'
+export * from './lib/ifs/types.js'
+export type { InMemoryConnection, Logger }
 
 const defaultConfig = {
   host: process.env.AS400_HOST,
@@ -20,15 +20,21 @@ const defaultConfig = {
   naming: 'system',
 }
 
-const javaBridge = initJavaBridge()
+let javaBridge: ReturnType<typeof initJavaBridge> | null = null
 
+function getJavaBridge() {
+  if (!javaBridge) {
+    javaBridge = initJavaBridge()
+  }
+  return javaBridge
+}
 export type JT400Options = {
   logger?: Logger
 }
-
 export function pool(config = {}, options: JT400Options = {}): Connection {
-  const javaCon = javaBridge.createPool(
-    JSON.stringify({ ...defaultConfig, ...config })
+  const bridge = getJavaBridge()
+  const javaCon = bridge.createPool(
+    JSON.stringify({ ...defaultConfig, ...config }),
   )
   return createConnection({
     connection: javaCon,
@@ -39,10 +45,11 @@ export function pool(config = {}, options: JT400Options = {}): Connection {
 }
 export async function connect(
   config = {},
-  options: JT400Options = {}
+  options: JT400Options = {},
 ): Promise<Connection> {
-  const javaCon = await javaBridge.createConnection(
-    JSON.stringify({ ...defaultConfig, ...config })
+  const bridge = getJavaBridge()
+  const javaCon = await bridge.createConnection(
+    JSON.stringify({ ...defaultConfig, ...config }),
   )
   return createConnection({
     connection: javaCon,
@@ -54,7 +61,7 @@ export async function connect(
 
 export function useInMemoryDb(options: JT400Options = {}): InMemoryConnection {
   return createInMemoryConnection(
-    javaBridge,
-    options.logger || createDefaultLogger()
+    getJavaBridge(),
+    options.logger || createDefaultLogger(),
   )
 }

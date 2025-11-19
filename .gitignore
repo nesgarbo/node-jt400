@@ -1,7 +1,8 @@
 *\#*
 *.bmk
 node_modules
-dist
+dist-esm
+dist-cjs
 config.js
 java/build
 java/bin

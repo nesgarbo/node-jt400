@@ -1,8 +1,7 @@
-'use strict'
-import { parse } from 'JSONStream'
-import { expect } from 'chai'
+import { useInMemoryDb } from '../index.js'
 import { Readable } from 'stream'
-import { useInMemoryDb } from '..'
+import { parse } from 'JSONStream'
+import assert from 'assert'
 
 const jt400 = useInMemoryDb()
 describe('hsql in memory', () => {
@@ -22,17 +21,17 @@ describe('hsql in memory', () => {
 
   describe('query', () => {
     it('should be in memory', () => {
-      expect(jt400.isInMemory()).to.equal(true)
+      assert.strictEqual(jt400.isInMemory(), true)
     })
 
     it('should select form testtbl', async () => {
       const res = await jt400.query<any>('select * from testtbl')
-      expect(res.length).to.equal(1)
+      assert.strictEqual(res.length, 1)
     })
 
     it('should use column alias when selecting', async () => {
       const res = await jt400.query<any>('select ID, NAME MYNAME from testtbl')
-      expect(res[0]).to.have.property('MYNAME')
+      assert.ok('MYNAME' in res[0])
     })
 
     it('should query as stream', (done) => {
@@ -46,7 +45,7 @@ describe('hsql in memory', () => {
 
       jsonStream.on('end', () => {
         try {
-          expect(data.length).to.equal(1)
+          assert.strictEqual(data.length, 1)
           done()
         } catch (e) {
           done(e)
@@ -68,8 +67,9 @@ describe('hsql in memory', () => {
 
       stream.on('error', (err) => {
         try {
-          expect(err.message).to.equal(
-            'Argumento incorrecto en una llamada JDBC: parameter index out of range: 1',
+          assert.strictEqual(
+            err.message,
+            'Invalid argument in JDBC call: parameter index out of range: 1',
           )
           done()
         } catch (e) {
@@ -85,7 +85,7 @@ describe('hsql in memory', () => {
         'insert into testtbl (NAME) values(?)',
         ['foo'],
       )
-      expect(res).to.equal(1234567891235)
+      assert.strictEqual(res, 1234567891235)
     })
 
     it('should insert list', async () => {
@@ -98,10 +98,10 @@ describe('hsql in memory', () => {
         },
       ])
 
-      expect(res).to.eql([1234567891235, 1234567891236])
+      assert.deepStrictEqual(res, [1234567891235, 1234567891236])
 
       const select = await jt400.query('select * from testtbl')
-      expect(select.length).to.equal(3)
+      assert.strictEqual(select.length, 3)
     })
 
     it('should insert date and timestamp', async () => {
@@ -112,7 +112,7 @@ describe('hsql in memory', () => {
         },
       ])
 
-      expect(ids).to.eql([1234567891235])
+      assert.deepStrictEqual(ids, [1234567891235])
     })
 
     it('should create write stream', (done) => {
@@ -135,7 +135,7 @@ describe('hsql in memory', () => {
           jt400
             .query('select name from testtbl')
             .then((res) => {
-              expect(res.length).to.equal(27)
+              assert.strictEqual(res.length, 27)
             })
             .then(done, done)
         })
@@ -153,7 +153,7 @@ describe('hsql in memory', () => {
         ],
       )
 
-      expect(res).to.eql([1, 1])
+      assert.deepStrictEqual(res, [1, 1])
     })
 
     it('should fail insert batch with oops-error', () => {
@@ -170,13 +170,14 @@ describe('hsql in memory', () => {
           throw new Error('wrong error')
         })
         .catch((error) => {
-          expect(error.message).to.equal(
-            'excepción de datos: formato fecha/hora incorrecto',
+          assert.strictEqual(
+            error.message,
+            'data exception: invalid datetime format',
           )
-          expect(error.cause.stack).to.include('JdbcJsonClient.setParams')
-          expect(error.context.sql).to.equal(sql)
-          expect(error.context.params).to.deep.equal(params)
-          expect(error.category).to.equal('ProgrammerError')
+          assert.ok(error.cause.stack.includes('JdbcJsonClient.setParams'))
+          assert.strictEqual(error.context.sql, sql)
+          assert.deepStrictEqual(error.context.params, params)
+          assert.strictEqual(error.category, 'ProgrammerError')
         })
     })
   })
@@ -209,7 +210,7 @@ describe('hsql in memory', () => {
 
     it('should return input by default', async () => {
       const res = await callFoo(input)
-      expect(res).to.eql(input)
+      assert.deepStrictEqual(res, input)
     })
 
     it('should register mock', async () => {
@@ -219,14 +220,14 @@ describe('hsql in memory', () => {
       })
 
       const res = await callFoo(input)
-      expect(res.baz).to.equal(20)
+      assert.strictEqual(res.baz, 20)
     })
   })
 
   describe('should mock ifs', () => {
     it('should get metadata', async () => {
       const metadata = await jt400.ifs().fileMetadata('/foo/bar.txt')
-      expect(metadata).to.deep.equal({
+      assert.deepStrictEqual(metadata, {
         exists: false,
         length: 0,
       })
@@ -238,7 +239,7 @@ describe('hsql in memory', () => {
       const statement = await jt400.execute('select * from testtbl')
       const metadata = await statement.metadata()
 
-      expect(metadata).to.eql([
+      assert.deepStrictEqual(metadata, [
         {
           name: 'ID',
           typeName: 'DECIMAL',
@@ -272,7 +273,7 @@ describe('hsql in memory', () => {
         .then((statement) => {
           const stream = statement.asStream()
           let data = ''
-          expect(statement.isQuery()).to.equal(true)
+          assert.strictEqual(statement.isQuery(), true)
 
           stream.on('data', (chunk) => {
             data += chunk
@@ -280,7 +281,8 @@ describe('hsql in memory', () => {
 
           stream.on('end', () => {
             try {
-              expect(data).to.equal(
+              assert.strictEqual(
+                data,
                 '[["1234567891234","Foo bar baz",null,null]]',
               )
               done()
@@ -299,14 +301,14 @@ describe('hsql in memory', () => {
         .execute('select * from testtbl')
         .then((statement) => statement.asObjectStream())
         .then((stream) => {
-          let data: any[] = []
+          const data: any[] = []
           stream.on('data', (chunk) => {
             data.push(chunk)
           })
 
           stream.on('end', () => {
             try {
-              expect(data).to.deep.equal([
+              assert.deepStrictEqual(data, [
                 {
                   ID: '1234567891234',
                   NAME: 'Foo bar baz',
@@ -328,7 +330,9 @@ describe('hsql in memory', () => {
     it('should get result as array', async () => {
       const statement = await jt400.execute('select * from testtbl')
       const data = await statement.asArray()
-      expect(data).to.eql([['1234567891234', 'Foo bar baz', null, null]])
+      assert.deepStrictEqual(data, [
+        ['1234567891234', 'Foo bar baz', null, null],
+      ])
     })
     it('should get result as iterable', async () => {
       const statement = await jt400.execute('select * from testtbl')
@@ -336,9 +340,14 @@ describe('hsql in memory', () => {
       let count = 0
       for await (const row of rows) {
         count++
-        expect(row).to.eql(['1234567891234', 'Foo bar baz', null, null])
+        assert.deepStrictEqual(row, [
+          '1234567891234',
+          'Foo bar baz',
+          null,
+          null,
+        ])
       }
-      expect(count).to.equal(1)
+      assert.strictEqual(count, 1)
     })
 
     it('should pipe to JSONStream', (done) => {
@@ -364,10 +373,10 @@ describe('hsql in memory', () => {
           })
 
           stream.on('end', () => {
-            expect(res.length).to.equal(110)
+            assert.strictEqual(res.length, 110)
             res.forEach((row, index) => {
               if (index > 0) {
-                expect(row[0]).to.eql('n' + index)
+                assert.deepStrictEqual(row[0], 'n' + index)
               }
             })
             done()
@@ -382,9 +391,9 @@ describe('hsql in memory', () => {
       const statement = await jt400.execute('update testtbl set NAME=?', [
         'testing',
       ])
-      expect(statement.isQuery()).to.equal(false)
+      assert.strictEqual(statement.isQuery(), false)
       const updated = await statement.updated()
-      expect(updated).to.equal(1)
+      assert.strictEqual(updated, 1)
     })
 
     it('should close stream', (done) => {
@@ -417,7 +426,7 @@ describe('hsql in memory', () => {
             })
 
             stream.on('end', () => {
-              expect(res.length).to.be.below(21)
+              assert.ok(res.length < 21)
               done()
             })
 
@@ -440,7 +449,7 @@ describe('hsql in memory', () => {
       })
 
       stream.on('end', () => {
-        expect(schema).to.eql([
+        assert.deepStrictEqual(schema, [
           {
             schema: 'PUBLIC',
             table: 'TESTTBL',
@@ -459,7 +468,7 @@ describe('hsql in memory', () => {
         table: 'TESTTBL',
       })
 
-      expect(res).to.eql([
+      assert.deepStrictEqual(res, [
         {
           name: 'ID',
           typeName: 'DECIMAL',
@@ -492,8 +501,8 @@ describe('hsql in memory', () => {
         table: 'TESTTBL',
       })
 
-      expect(res.length).to.equal(1)
-      expect(res[0].name).to.equal('ID')
+      assert.strictEqual(res.length, 1)
+      assert.strictEqual(res[0].name, 'ID')
     })
   })
 
@@ -518,7 +527,7 @@ describe('hsql in memory', () => {
           jt400.query<any>('select NAME from testtbl where id=?', [rowId]),
         )
         .then((res) => {
-          expect(res[0].NAME).to.eql('Transaction 2')
+          assert.deepStrictEqual(res[0].NAME, 'Transaction 2')
         })
     })
 
@@ -537,11 +546,11 @@ describe('hsql in memory', () => {
             })
         })
         .catch((err) => {
-          expect(err).to.equal(fakeError)
+          assert.strictEqual(err, fakeError)
         })
         .then(() => jt400.query('select NAME from testtbl where id=?', [rowId]))
         .then((res) => {
-          expect(res.length).to.equal(0)
+          assert.strictEqual(res.length, 0)
         })
     })
 
@@ -552,7 +561,7 @@ describe('hsql in memory', () => {
           ['Bar'],
         ])
       })
-      expect(res).to.eql([1, 1])
+      assert.deepStrictEqual(res, [1, 1])
     })
   })
 })
