@@ -14,7 +14,9 @@ export interface BLOB {
 export type Param = string | number | Date | null | CLOB | BLOB
 
 export interface QueryOptions {
-  trim: boolean
+  trim?: boolean,
+  cursor?: boolean,
+  fetchSize?: number
 }
 
 export interface Metadata {

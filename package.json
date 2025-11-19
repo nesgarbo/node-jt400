@@ -1,7 +1,7 @@
 {
   "name": "@nesgarbo/node-jt400",
   "author": "Néstor García Bou <nesgarbo@icloud.com>",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "description": "JT400 (IBM Toolbox) for NodeJS",
   "type": "module",
   "main": "dist-cjs/index.js",
