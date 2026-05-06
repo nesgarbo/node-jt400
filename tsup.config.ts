@@ -5,12 +5,11 @@ import { join } from 'path'
 export default defineConfig([
   // ESM build
   {
-    entry: ['ts-src/**/*.ts'],
+    entry: ['ts-src/**/*.ts', '!ts-src/unit-test/**', '!ts-src/integration-test/**'],
     format: ['esm'],
     outDir: 'dist-esm',
     sourcemap: true,
     dts: true,
-    shims: true,
     bundle: false,
     splitting: false,
     clean: true,
@@ -32,7 +31,7 @@ export default defineConfig([
   },
   // CJS build
   {
-    entry: ['ts-src/**/*.ts'],
+    entry: ['ts-src/**/*.ts', '!ts-src/unit-test/**', '!ts-src/integration-test/**'],
     format: ['cjs'],
     outDir: 'dist-cjs',
     sourcemap: true,
