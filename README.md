@@ -1,521 +1,482 @@
-# node-jt400
+# @nesgarbo/node-jt400
 
-NodeJS JT400 wrapper to connect to IBM iSeries and AS/400 systems (OS400 operating system, database like DB2, programs and filesystem).
+Node.js/TypeScript wrapper for the IBM Toolbox for Java (JT400). Provides a Promise-based API to interact with IBM iSeries/AS400 systems: DB2 database, IFS filesystem, RPG/COBOL programs, message queues, and data queues.
 
-[![Version](https://img.shields.io/npm/v/node-jt400.svg)](https://npmjs.org/package/node-jt400)
+Bridges Node.js to the JVM via [`java-bridge`](https://www.npmjs.com/package/java-bridge). Dual ESM/CJS package with full TypeScript declarations.
 
-## Module System Support
+## Requirements
 
-This package is published as a **dual-mode package** supporting both ESM (ECMAScript Modules) and CommonJS:
-
-- Use `import` in ESM projects (Node.js 16+)
-- Use `require()` in CommonJS projects
-- Full TypeScript support with type definitions for both formats
-
-## About
-
-This package is built on the IBM Toolbox for Java (http://jt400.sourceforge.net/). It maps the java functions to node using node-java. Not all of the Java code has been mapped over to node. The reason is that this module was originally written for internal use-only for Tryggingadmidstodin. Therefore we only implemented what Tryggingamidstodin needed, for example program calls, but not stored procedures.
-
-Tryggingamidstodin is an Icelandic insurance company dealing with legacy systems in AS400. We figured other people or companies might be dealing with the similar problems so this module was made open source. Most of the coding and documentation reflects this, although we are always trying to improve that. For example the library for programs was orignally not configurable, but is now.
-
-We are always open to suggestions on how to improve and welcome most pull-requests.
-
-## Changes
-
-Check out our [changelog.md](https://github.com/tryggingamidstodin/node-jt400/blob/master/CHANGELOG.md) to see changes to this project. Please note that this changelog was added in version 4.0 so documentation on versions prior to that are incomplete. Feel free to add to this changelog and report an issue if you're having troubles with updating this package.
+- Node.js 18+
+- Java 8+ (JRE or JDK) installed and available in `PATH`
 
 ## Install
 
 ```sh
-npm install node-jt400 --save
+npm install @nesgarbo/node-jt400
 ```
 
-#### Windows
+## Module system
 
-Windows installations can be tricky because of node-java dependency. Make sure that that module works first. You can [check out the node-java documentation for windows installation](https://github.com/joeferner/node-java#installation-windows)
+Both ESM and CommonJS are supported:
 
-We also have some solved issues you can take a look at like [#13](https://github.com/tryggingamidstodin/node-jt400/issues/13) and [#26](https://github.com/tryggingamidstodin/node-jt400/issues/26)
-
-Other issues might be related to node-gyp, python and MS build tools or VS IDE.
-
-## Configure
-
-Most basic configuration would be:
-
-```javascript
-const config = {
-  host: 'myhost',
-  user: 'myuser',
-  password: 'xxx',
-}
-const pool = require('node-jt400').pool(config)
+```ts
+// ESM
+import { pool, connect, useInMemoryDb } from '@nesgarbo/node-jt400'
 ```
 
-But the config accepts all [JT400 JDBC Properties](https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_73/rzahh/javadoc/com/ibm/as400/access/doc-files/JDBCProperties.html) so you can add other options like `translate binary`
+```js
+// CommonJS
+const { pool, connect, useInMemoryDb } = require('@nesgarbo/node-jt400')
+```
 
-```javascript
-const config = {
+## Connecting
+
+### Connection pool (synchronous)
+
+```ts
+import { pool } from '@nesgarbo/node-jt400'
+
+const db = pool({
   host: 'myhost',
   user: 'myuser',
-  password: 'xxx',
+  password: 'secret',
+})
+```
+
+### Single connection (async)
+
+```ts
+import { connect } from '@nesgarbo/node-jt400'
+
+const db = await connect({
+  host: 'myhost',
+  user: 'myuser',
+  password: 'secret',
+})
+```
+
+### Configuration
+
+`host`, `user`, and `password` fall back to environment variables `AS400_HOST`, `AS400_USERNAME`, and `AS400_PASSWORD` when omitted. The `naming` option defaults to `'system'` (IBM iSeries naming convention).
+
+Any [JT400 JDBC property](https://www.ibm.com/support/knowledgecenter/en/ssw_ibm_i_73/rzahh/javadoc/com/ibm/as400/access/doc-files/JDBCProperties.html) can be passed in the config object:
+
+```ts
+const db = pool({
+  host: 'myhost',
+  user: 'myuser',
+  password: 'secret',
   'translate binary': 'true',
   trace: 'true',
-}
-const pool = require('node-jt400').pool(config)
+})
 ```
-
-To close the connection pool you can call `pool.close()`
 
 ### Logging
 
-You can also pass in you preferred logger. E.g. pino:
+Pass any pino-compatible logger as the second argument:
 
-```javascript
-import createLogger from 'pino'
-import { pool } from 'node-jt400'
+```ts
+import pino from 'pino'
+import { pool } from '@nesgarbo/node-jt400'
 
-const config = {}
-const options = {
-  logger: createLogger(),
-}
-const connection = pool(config, options)
+const db = pool({}, { logger: pino() })
 ```
 
-# SQL / Database
+---
 
-## Query
+## SQL / Database
 
-###### Promises
+### Query
 
-```javascript
-pool
-  .query('SELECT field1, field2 FROM foo WHERE bar=? AND baz=?', [1, 'a'])
-  .then((result) => {
-    console.log('result')
-    const field1 = result[0].FIELD1
-    console.log(field1)
-  })
-  .catch((error) => {
-    console.log('error')
-    console.log(error)
-  })
+Returns rows as an array of objects. Column names are uppercased.
+
+```ts
+const rows = await db.query<{ FIELD1: number; FIELD2: string }>(
+  'SELECT field1, field2 FROM foo WHERE bar=? AND baz=?',
+  [1, 'a'],
+)
+console.log(rows[0].FIELD1)
 ```
 
-###### Async/await
+String values are automatically trimmed. Disable with `{ trim: false }`:
 
-```javascript
-try {
-  const results = await pool.query(
-    'SELECT field1, field2 FROM foo WHERE bar=? AND baz=?',
-    [1, 'a'],
-  )
-  console.log('result')
-  const field1 = result[0].FIELD1
-  console.log(field1)
-} catch (error) {
-  console.log('error')
-  console.log(error)
-}
+```ts
+const rows = await db.query('SELECT name FROM foo', [], { trim: false })
 ```
 
-Please note that values from the database are automatically trimmed so 'abc ' will be returned as 'abc'.
-[Issue #27](https://github.com/tryggingamidstodin/node-jt400/issues/22)
-To override this use the optional QueryOptions parameter to set trim to false.
+### Update / Delete
 
-```javascript
-pool.query('SELECT field1, field2 FROM foo WHERE bar=? AND baz=?', [1, 'a'], {
-  trim: false,
-})
-```
-
-## Update
-
-###### Promises
-
-```javascript
-pool.update('UPDATE foo SET bar=? WHERE baz=?', [1, 'a']).then((nUpdated) => {
-  console.log('Updated ' + nUpdated + ' rows')
-})
-```
-
-###### Async/await
-
-```javascript
-try {
-  const rowsUpdated = await pool.update('UPDATE foo SET bar=? WHERE baz=?', [
-    1,
-    'a',
-  ])
-  console.log('rows updated')
-  console.log(rowsUpdated)
-} catch (error) {
-  console.log('error')
-  console.log(error)
-}
-```
-
-### Delete
-
-###### Promises
-
-```javascript
-pool
-  .update('DELETE FROM foo WHERE bar=?', [1])
-  .then(nUpdated => {
-    console.log('Deleted + ' nUpdated + ' rows');
-});
-```
-
-###### Async/await
-
-```javascript
-try {
-    const rowsDeleted = await pool.update('DELETE FROM foo WHERE bar=?', [1]);
-    console.log('Deleted + ' rowsDeleted + ' rows');
-}
-catch (error) {
-    console.log('error');
-    console.log(error);
-}
+```ts
+const rowsUpdated = await db.update('UPDATE foo SET bar=? WHERE baz=?', [1, 'a'])
+const rowsDeleted = await db.update('DELETE FROM foo WHERE bar=?', [1])
 ```
 
 ### Insert
 
-###### Promises
-
-```javascript
-pool
-  .insertAndGetId('INSERT INTO foo (bar, baz) VALUES(?,?)', [2, 'b'])
-  .then((id) => {
-    console.log('Inserted new row with id ' + id)
-  })
-```
-
-###### Async/await
-
-```javascript
-try {
-  const id = await pool.insertAndGetId(
-    'INSERT INTO foo (bar, baz) VALUES(?,?)',
-    [2, 'b'],
-  )
-  console.log('Inserted new row with id ' + id)
-} catch (error) {
-  console.log('error')
-  console.log(error)
-}
+```ts
+// Insert and get the generated identity value
+const id = await db.insertAndGetId('INSERT INTO foo (bar, baz) VALUES(?,?)', [2, 'b'])
 ```
 
 ### Insert list
 
-###### Promises
+Inserts multiple rows in a single round-trip and returns the generated IDs. All rows must have the same keys in the same order.
 
-```javascript
-const tableName = 'foo'
-const idColumn = 'fooid'
-const rows = [
+```ts
+const ids = await db.insertList('foo', 'fooid', [
   { FIELD1: 1, FIELD2: 'a' },
   { FIELD1: 2, FIELD2: 'b' },
-]
-
-pool.insertList(tableName, idColumn, rows).then((listOfGeneratedIds) => {
-  console.log(listOfGeneratedIds)
-})
-```
-
-###### Async/await
-
-```javascript
-try {
-  const idList = await pool.insertList(tableName, idColumn, rows)
-  console.log(idList)
-} catch (error) {
-  console.log('error')
-  console.log(error)
-}
+])
+// ids: [1, 2]
 ```
 
 ### Batch update
 
-###### Promises
+Executes a parameterized statement once per row in a single JDBC batch, returning the number of affected rows for each.
 
-```javascript
-//insert list in one statement
-const data = [
+```ts
+const counts = await db.batchUpdate('INSERT INTO foo (f1, f2) VALUES(?,?)', [
   [1, 'a'],
   [2, 'b'],
-]
-
-pool
-  .batchUpdate('INSERT INTO FOO (FIELD1, FIELD2) VALUES(?,?)', data)
-  .then((result) => {
-    console.log(result)
-    //result is number of updated rows for each row. [1, 1] in this case.
-  })
+])
+// counts: [1, 1]
 ```
 
-###### Async/await
+### Complex types (CLOB / BLOB)
 
-```javascript
-try {
-  const result = await pool.batchUpdate(
-    'INSERT INTO FOO (FIELD1, FIELD2) VALUES(?,?)',
-    data,
-  )
-  console.log(result)
-  // result is the number of updated rows for each row. [1, 1] in this case.
-} catch (error) {
-  console.log('error')
-  console.log(error)
-}
+Strings, numbers, and `null` are handled automatically. For CLOB or BLOB pass a typed object:
+
+```ts
+await db.update('INSERT INTO foo (id, notes, doc) VALUES(?,?,?)', [
+  1,
+  { type: 'CLOB', value: 'A very long string...' },
+  { type: 'BLOB', value: base64String },
+])
 ```
 
-### SQL stream
+For BLOB, pass the base64 string representation of the file.
 
-```javascript
-pool
-  .createReadStream('SELECT FIELD1, FIELD2 FROM FOO WHERE BAR=? AND BAZ=?', [
-    1,
-    'a',
-  ])
+### Date parameters
+
+Pass JavaScript `Date` objects directly — they are converted to `"YYYY-MM-DD HH:mm:ss"` before being sent to JDBC:
+
+```ts
+await db.update('INSERT INTO foo (id, ts) VALUES(?,?)', [1, new Date()])
+```
+
+---
+
+## Streaming
+
+### SQL read stream
+
+Returns a `Readable` emitting raw JSON chunks (one JSON array per row). Combine with `JSONStream` to pipe rows elsewhere:
+
+```ts
+import JSONStream from 'JSONStream'
+
+db.createReadStream('SELECT f1, f2 FROM foo WHERE bar=?', [1])
   .pipe(JSONStream.parse([true]))
-  .pipe(pool.createWriteStream('INSERT INTO FOO2 (F1, F2) VALUES(?, ?)'))
+  .pipe(db.createWriteStream('INSERT INTO bar (f1, f2) VALUES(?,?)'))
 ```
 
-#### asObjectStream
+### SQL write stream
 
-```javascript
-const streamOfObjects = await pool
-  .execute('SELECT field1, field2 FROM foo', [])
-  .then((statement) => statement.asObjectStream())
+Returns an object-mode `Writable`. Write plain arrays of parameter values; rows are buffered (default 100) and flushed as a `batchUpdate`:
+
+```ts
+const ws = db.createWriteStream('INSERT INTO bar (f1, f2) VALUES(?,?)')
+ws.write([1, 'a'])
+ws.write([2, 'b'])
+ws.end()
 ```
 
-### iterable
+### Object stream
 
-```javascript
-const statement = await pool.execute(
-  'SELECT FIELD1, FIELD2 FROM FOO WHERE BAR=? AND BAZ=?',
-  [1, 'a'],
-)
-const rows = statement.asIterable()
-for await (const [field1, field2] of rows) {
-  console.log(field1, field2)
+```ts
+const stmt = await db.execute('SELECT field1, field2 FROM foo', [])
+const objectStream = await stmt.asObjectStream()
+// objectStream emits plain JS objects per row
+```
+
+### Async iterable (row by row)
+
+`execute()` returns a `Statement` whose `asIterable()` yields each row as a `string[]`:
+
+```ts
+const stmt = await db.execute('SELECT f1, f2 FROM foo WHERE bar=?', [1])
+for await (const [f1, f2] of stmt.asIterable()) {
+  console.log(f1, f2)
 }
 ```
 
-### Transactions
+### Cursor (lazy row-by-row)
 
-Transaction is commited on success and rolled back on failure.
-The transaction object has the same api as the pool object.
+`queryCursor<T>()` returns an `AsyncIterable<T>` that fetches rows one at a time without loading the full result set. The underlying statement is automatically closed when iteration ends or is abandoned.
 
-```javascript
-pool.transaction((transaction) => {
-  const fooId = 1
+```ts
+for await (const row of db.queryCursor<{ ID: number; NAME: string }>(
+  'SELECT id, name FROM bigtable ORDER BY id',
+)) {
+  process.stdout.write(row.NAME + '\n')
+}
+```
 
-  return transaction
-    .update('INSERT INTO FOO (FOOID, FIELD2) VALUES(?,?)', [fooId, 'a'])
-    .then(function () {
-      return transaction.update('update BAR set FOOID=? where BARID=?', [
-        fooId,
-        2,
-      ])
-    })
+---
+
+## `Statement` API
+
+`execute(sql, params?)` returns a `Statement` with the following methods:
+
+| Method | Description |
+|--------|-------------|
+| `asArray()` | All rows as `string[][]` |
+| `asStream(options?)` | Node.js `Readable` of raw JSON chunks |
+| `asObjectStream(options?)` | Node.js `Readable` of parsed row objects |
+| `asIterable()` | `AsyncIterable<string[]>` for `for await...of` |
+| `updated()` | Rows affected (DML statements) |
+| `metadata()` | Column descriptors (`Metadata[]`) |
+| `isQuery()` | Whether the statement is a SELECT |
+| `close()` | Release the statement |
+
+---
+
+## Transactions
+
+The transaction callback receives a connection object with the same API as the pool. The transaction is committed on success and rolled back on any thrown error.
+
+```ts
+await db.transaction(async (tx) => {
+  const fooId = await tx.insertAndGetId('INSERT INTO foo (name) VALUES(?)', ['bar'])
+  await tx.update('INSERT INTO baz (fooid, val) VALUES(?,?)', [fooId, 42])
 })
 ```
 
-### Complex types
+### Low-level commit / rollback
 
-The node-jt400 module handles strings, longs, doubles and nulls automatically as types. When using other types like CLOB or BLOB you need to specify the type specifically.
+For ODBC-compatibility scenarios where you manage the transaction boundary yourself:
 
-```javascript
-pool
-  .update('INSERT INTO foo (fooid, textfield, clobfield) VALUES(?, ?)', [
-    1,
-    'text',
-    { type: 'CLOB', value: 'A really long string' },
-  ])
-  .then(() => {
-    console.log('updated')
-  })
+```ts
+await db.update('INSERT INTO foo (name) VALUES(?)', ['bar'])
+await db.commit()
+// or:
+await db.rollback()
 ```
 
-For BLOB pass the base64 string representation of a file. The module will convert it to a blob for the AS400 database.
+---
 
-```javascript
-const fs = require('fs').promises
-const base64String = await fs.readFile('/path/to/file.jpg', {
-  encoding: 'base64',
-})
-pool
-  .update('INSERT INTO foo (fooid, textfield, blobfield) VALUES(?, ?)', [
-    1,
-    'text',
-    { type: 'BLOB', value: base64String },
-  ])
-  .then(() => {
-    console.log('updated')
-  })
+## IFS Filesystem
+
+```ts
+const ifs = db.ifs()
 ```
 
-When querying a blob field you will recieve a string.
+### Read a file
 
-## Filesystem
+```ts
+import { createWriteStream } from 'fs'
 
-### IFS read
-
-```javascript
-const ifs = pool.ifs()
-const readStream = ifs.createReadStream('/foo/bar.txt') // readStream from IFS
+ifs.createReadStream('/home/myuser/report.txt').pipe(createWriteStream('./report.txt'))
 ```
 
-As with any readable stream you can pipe it wherever you want. For example into the node filesystem.
+### Write a file
 
-```javascript
-const createWriteStream = require('fs').createWriteStream
-const join = require('path').join
-const filename = join(__dirname, 'old.txt')
-const writeStream = createWriteStream(filename) // writeStream to nodeJS filesystem.
+```ts
+import { createReadStream } from 'fs'
 
-const ifs = pool.ifs()
-const readStream = ifs.createReadStream('/new.txt') // Reading bar.txt from IFS
-
-readStream.pipe(writeStream) // Piping from IFS to nodeJS
+createReadStream('./local.txt').pipe(ifs.createWriteStream('/home/myuser/remote.txt'))
 ```
 
-### IFS write
+Append mode and CCSID encoding:
 
-```javascript
-const ifs = pool.ifs();
-const writeStream = ifs.createWriteStream(('/foo/bar.txt')
+```ts
+ifs.createWriteStream('/home/myuser/log.txt', { append: true, ccsid: 1208 })
 ```
 
-As with any other writable streams you can pipe a readable stream into it.
+### Delete a file
 
-```javascript
-const fs = require('fs').createReadStream
-const join = require('path').join
-const filename = join(__dirname, 'old.txt')
-const readStream = createReadStream(filename) // readStream from nodeJS filesystem
-
-const ifs = pool.ifs()
-const writeStream = ifs.createWriteStream('/new.txt')
-
-readStream.pipe(writeStream) // Piping from nodeJS to IFS
+```ts
+const deleted = await ifs.deleteFile('/home/myuser/old.txt') // true | false
 ```
 
-You can see more examples in [issue #27](https://github.com/tryggingamidstodin/node-jt400/issues/27)
+### Other IFS operations
 
-### IFS delete
-
-```javascript
-const ifs = pool.ifs()
-ifs.deleteFile('/foo/bar.txt.old').then(console.log) // true or false
+```ts
+await ifs.moveFile('/tmp/source.txt', '/home/myuser/dest.txt')
+const files = await ifs.listFiles('/home/myuser')
+const meta = await ifs.fileMetadata('/home/myuser/report.txt')
 ```
 
-## Programs
+---
 
-With programs it is necessary to define your input parameters first. These must match your program defination in AS.
+## Programs (RPG / COBOL)
 
-```javascript
-const myProgram = pool.defineProgram({
+Define the program once with its parameter schema, then call the returned function.
+
+```ts
+const myProgram = db.defineProgram({
   programName: 'MYPGM',
+  libraryName: 'MYLIB',      // optional, defaults to *LIBL
   paramsSchema: [
-    { type: 'DECIMAL', precision: 10, scale: 0, name: 'myId'},
-    { type: 'NUMERIC', precision: 8,  scale: 0, name: 'myDate'},
-    { type: 'NUMERIC', precision: 12, scale: 2, name: 'myTotalValue' },
-    { type: 'CHAR',    precision: 32, scale: 0, name: 'myString'}
+    { type: 'DECIMAL', precision: 10, scale: 0, name: 'myId' },
+    { type: 'NUMERIC', precision: 8,  scale: 0, name: 'myDate' },
+    { type: 'NUMERIC', precision: 12, scale: 2, name: 'myAmount' },
+    { type: 'CHAR',    precision: 32, scale: 0, name: 'myString' },
   ],
-  libraryName: 'WTMEXC' // Optional. Defaults to *LIBL
-);
-```
+})
 
-The Decimal type maps to com.ibm.as400.access.AS400PackedDecimal
-The Numeric type maps to com.ibm.as400.access.AS400ZonedDecimal
-Everything else (char) maps to com.ibm.as400.access.AS400Text
-Precision is the size and scale is the decimals.
-
-> ATTENTION: To make the API clearer we renamed .pgm to .defineProgram. The pgm function is deprecated in v3.0
-
-When you have defined your program, you can call/invoke it with the parameters you defined.
-
-```javascript
-myProgram(
+const result = await myProgram(
   {
-    myId: 123
-    myDate: '20170608',
-    myTotalValue: 88450.57,
-    myString: 'This is a test'
+    myId: 123,
+    myDate: '20240101',
+    myAmount: 1234.56,
+    myString: 'hello',
   },
-  10 // Optional timeout in sec
+  10, // optional timeout in seconds (default: 3, pass 0 to disable)
 )
-.then(result => {
-  console.log(result)
-});
 ```
 
-> ATTENTION: In version 3.0 we added a optional timeout parameter for program calls. This defaults to 3 sec. This is a breaking change since your programs will no longer halt or hang for extended period and therefore never give a response. If you have complicated programs that run for longer than 3 sec then you need to adjust the timeout parameter for those specific calls. Setting it to 0 will ignore the timeout limit.
+Type mapping:
+
+| Schema type | Java type |
+|-------------|-----------|
+| `DECIMAL`   | `AS400PackedDecimal` |
+| `NUMERIC`   | `AS400ZonedDecimal` |
+| anything else | `AS400Text` |
+
+> `pgm()` is deprecated. Use `defineProgram()`.
+
+---
 
 ## Keyed Data Queues
 
-[IBM KeyedDataQueue Reference](https://javadoc.midrange.com/jtopen/index.html?com/ibm/as400/access/KeyedDataQueue.html)
+```ts
+const dq = db.createKeyedDataQ({ name: 'MYDATAQ' })
 
-```javascript
-const jt400 = pool(jt400config)
-// Open a keyed data queue for reading
-let queue = jt400.createKeyedDataQ({ name })
-// -1 waits until a message exists. (MSGW)
-let m = await queue.read({ key: inboxKey, wait: 2 })
+// Write
+await dq.write('mykey', 'hello')
+
+// Read (wait up to 5 seconds)
+const data = await dq.read({ key: 'mykey', wait: 5 })
+console.log(data) // 'hello'
 ```
+
+Read with a reply queue (writeKeyLength enables response routing):
+
+```ts
+void dq.read({ key: 'mykey', wait: 10, writeKeyLength: 11 }).then(async (res) => {
+  const { data, write } = res as { data: string; write: (d: string) => Promise<void> }
+  await write('pong')
+})
+
+await dq.write('mykey', 'returnkey  ping')
+const reply = await dq.read({ key: 'returnkey  ', wait: 10 })
+```
+
+Pass `wait: -1` to wait indefinitely until a message arrives.
+
+---
 
 ## Message Queues
 
-[IBM MessageQueue Reference](https://javadoc.midrange.com/jtopen/index.html?com/ibm/as400/access/MessageQueue.html)
+```ts
+const path = `/QSYS.LIB/${process.env.AS400_USERNAME}.MSGQ`
+const msgq = await db.openMessageQ({ path })
 
-```javascript
-const path = '/QSYS.LIB/' + process.env.AS400_USERNAME + '.MSGQ'
-const msgq = await jt400.openMessageQ({ path: path })
-const testMessage = 'Test Message'
-await msgq.sendInformational(testMessage) // Writes a basic message
-await msgq.read()
+await msgq.sendInformational('Hello from Node.js')
+
+const msg = await msgq.read()
+console.log(msg?.text)
 ```
+
+---
 
 ## Message Files
 
-[IBM AS400Message Reference](https://javadoc.midrange.com/jtopen/index.html?com/ibm/as400/access/MessageFile.html)
-
-```javascript
-const file = await pool.openMessageFile({
-  path: '/QSYS.LIB/YOURLIB.LIB/YOURMSGF.MSGF',
+```ts
+const file = await db.openMessageFile({
+  path: '/QSYS.LIB/MYLIB.LIB/MYMSGF.MSGF',
 })
-let msg = await file.read({ messageId: 'AMX0051' })
-console.log('msg', await msg.getText())
+const msg = await file.read({ messageId: 'AMX0051' })
+console.log(await msg.getText())
 ```
 
-# Error handling
+---
 
-This module uses [oops-error](https://github.com/tryggingamidstodin/oops-error) to categorize errors into operational errors and programmer errors. We reccomend you take a look at the [readme](https://github.com/tryggingamidstodin/oops-error/blob/master/README.md) for further information about these categories.
+## Error handling
 
-The oops-error has few properties:
+All errors are wrapped using [`oops-error`](https://github.com/tryggingamidstodin/oops-error) and categorized:
 
-- category: Tells you the error is programmer or operational.
-- message: The basic error message.
-- cause: the original error.
-- fullstack: function that returns the fullstack of causes.
+- **`OperationalError`** — connection/network failures (e.g. `UnknownHostException`)
+- **`ProgrammerError`** — SQL syntax errors, wrong parameter counts, data errors, etc.
 
-## Examples
-
-Lets define too many paramters for our query.
-
-```javascript
-pool
-  .query('SELECT field1, field2 FROM foo WHERE bar=? AND baz=?', [1, 'a', 'b])
-  .then(result => {
-    console.log('we will not go here')
-  })
-  .catch(error => {
-    console.log('we got programmer error');
-    console.log('category': errror.category) // ProgrammerError
-    console.log('message': errror.message) // Descriptor index not valid.
-    console.log('original error', error.cause)
-  });
+```ts
+try {
+  await db.query('SELECT * FROM foo WHERE bar=?', [1, 'extra-param'])
+} catch (err) {
+  console.log(err.category) // 'ProgrammerError'
+  console.log(err.message)  // e.g. 'Descriptor index not valid.'
+  console.log(err.cause)    // original Java exception
+}
 ```
+
+---
+
+## Testing with in-memory DB
+
+`useInMemoryDb()` returns a connection backed by HSQLDB (an in-memory Java database). Use it in unit tests without an AS400 connection.
+
+```ts
+import { useInMemoryDb } from '@nesgarbo/node-jt400'
+
+const db = useInMemoryDb()
+
+await db.update('CREATE TABLE foo (id INT GENERATED ALWAYS AS IDENTITY, name VARCHAR(100))')
+await db.update('INSERT INTO foo (name) VALUES(?)', ['bar'])
+const rows = await db.query<{ ID: number; NAME: string }>('SELECT id, name FROM foo')
+```
+
+### Mocking program calls
+
+```ts
+const db = useInMemoryDb()
+
+db.mockPgm('MYPGM', (input) => {
+  return [{ result: input.myId * 2 }]
+})
+
+const run = db.defineProgram({ programName: 'MYPGM', paramsSchema: [] })
+const result = await run({ myId: 5 })
+```
+
+Mock functions can return a value or a `Promise`. Calls can be chained:
+
+```ts
+db.mockPgm('PGM1', () => [{ ok: true }]).mockPgm('PGM2', () => [{ ok: true }])
+```
+
+---
+
+## Metadata
+
+```ts
+const columns = await db.getColumns({
+  schema: 'MYLIB',
+  table: 'MYTABLE',
+})
+
+const pks = await db.getPrimaryKeys({
+  schema: 'MYLIB',
+  table: 'MYTABLE',
+})
+
+const tableStream = db.getTablesAsStream({
+  schema: 'MYLIB',
+})
+```
+
+---
+
+## License
+
+MIT
