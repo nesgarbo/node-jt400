@@ -72,13 +72,10 @@ describe('jt400 pool', () => {
   })
 
   it('should trim values when trim is undefined', async () => {
-    let trim
     const data: any = await connection.query(
       'select * from tsttbl order by bar',
       [],
-      {
-        trim,
-      },
+      { trim: undefined },
     )
     assert.strictEqual(data.length, 2)
     assert.strictEqual(data[1].FOO, 'bar2')

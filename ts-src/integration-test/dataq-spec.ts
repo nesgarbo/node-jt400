@@ -5,19 +5,19 @@ describe('keyed dataQ', () => {
   it('should read and write', (done) => {
     const dataQ = jt400.createKeyedDataQ({ name: 'SDQS1' })
 
-    dataQ
+    void dataQ
       .read('mytestkey')
       .then((data) => {
         assert.strictEqual(data, 'ping')
       })
       .then(done, done)
 
-    dataQ.write('mytestkey', 'ping')
+    void dataQ.write('mytestkey', 'ping')
   }).timeout(5000)
 
   it('should fail on timeout', (done) => {
     const dataQ = jt400.createKeyedDataQ({ name: 'SDQS1' })
-    dataQ
+    void dataQ
       .read({ key: 'mytestkey', wait: 1 /* sec */ })
       .catch((err) => {
         assert.ok(err.message.includes('timeout, key: mytestkey'))
@@ -27,17 +27,17 @@ describe('keyed dataQ', () => {
 
   it('should write to reponse', () => {
     const dataQ = jt400.createKeyedDataQ({ name: 'SDQS1' })
-    dataQ
+    void dataQ
       .read({ key: 'mytestkey', wait: 1, writeKeyLength: 11 })
       .then((res) => {
-        assert.strictEqual(res.data, 'ping')
-        res.write('pong')
+        assert.strictEqual((res as { data: string }).data, 'ping')
+        return (res as { write: (d: string) => Promise<void> }).write('pong')
       })
       .catch((err) => {
         console.log('error reading data Q', err)
       })
 
-    dataQ.write('mytestkey', 'returnkey  ping')
+    void dataQ.write('mytestkey', 'returnkey  ping')
 
     return dataQ.read({ key: 'returnkey  ', wait: 10 }).then((data) => {
       assert.strictEqual(data, 'pong')
