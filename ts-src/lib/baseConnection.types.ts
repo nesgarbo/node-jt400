@@ -14,9 +14,11 @@ export interface BLOB {
 export type Param = string | number | Date | null | CLOB | BLOB
 
 export interface QueryOptions {
-  trim?: boolean,
-  cursor?: boolean,
-  fetchSize?: number
+  trim?: boolean
+}
+
+export interface CursorOptions {
+  // reserved for future options
 }
 
 export interface Metadata {
@@ -25,14 +27,18 @@ export interface Metadata {
   precision: number
   scale: number
 }
+export interface StreamOptions {
+  bufferSize?: number
+}
+
 export interface Statement {
   prepare: (sql: string) => Promise<void>
   isQuery: () => boolean
   metadata: () => Promise<Metadata[]>
   asArray: () => Promise<string[][]>
   asIterable: () => AsyncIterable<string[]>
-  asStream: (options?: any) => Readable
-  asObjectStream: (options?: any) => Promise<Readable>
+  asStream: (options?: StreamOptions) => Readable
+  asObjectStream: (options?: StreamOptions) => Promise<Readable>
   updated: () => Promise<number>
   close: Close
 }
@@ -42,7 +48,6 @@ export type Query = {
     sql: string,
     params?: Param[] | undefined,
     options?: QueryOptions,
-    callback?: (error: any, cursor: any) => void,
   ): Promise<T[]>
 }
 export type Update = (sql: string, params?: Param[]) => Promise<number>
@@ -62,7 +67,7 @@ export type Close = () => void
 export type InsertList = (
   tableName: string,
   idColumn: string,
-  rows: any[],
+  rows: Record<string, Param>[],
 ) => Promise<number[]>
 export interface BaseConnection {
   query: Query
@@ -74,6 +79,7 @@ export interface BaseConnection {
   createWriteStream: CreateWriteStream
   batchUpdate: BatchUpdate
   execute: Execute
+  queryCursor: <T>(sql: string, params?: Param[], options?: CursorOptions) => AsyncIterable<T>
 
   commit: () => Promise<void>
   rollback: () => Promise<void>

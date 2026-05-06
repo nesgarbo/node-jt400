@@ -1,5 +1,5 @@
 import { Readable } from 'stream'
-import { BaseConnection, Close } from './baseConnection.types.js'
+import { BaseConnection, Close, Metadata, Param } from './baseConnection.types.js'
 import { Ifs } from './ifs/types.js'
 
 export interface ProgramDefinitionOptions {
@@ -52,20 +52,31 @@ export interface MessageFileHandlerOptions {
 }
 export interface MessageFileReadOptions {
   /** Message Key */
-  messageId: string[7]
+  messageId: string
+}
+
+export interface MessageQMessage {
+  text: string
+  [key: string]: unknown
 }
 
 export interface MessageQ {
   sendInformational: (messageText: string) => Promise<void>
-  read: (params?: MessageQReadOptions) => Promise<any> | Promise<null>
+  read: (params?: MessageQReadOptions) => Promise<MessageQMessage | null>
 }
 
 export interface DataQOptions {
   name: string
 }
+
+export interface DataQReadResult {
+  data: string
+  write: (data: string) => Promise<void>
+}
+
 export interface KeyedDataQ {
   write: (key: string, data: string) => void
-  read: (params: DataQReadOptions | string) => Promise<any>
+  read: (params: DataQReadOptions | string) => Promise<string | DataQReadResult>
 }
 
 export interface AS400Message {
@@ -76,19 +87,32 @@ export interface MessageFileHandler {
   read: (params: MessageFileReadOptions) => Promise<AS400Message>
 }
 
-export type TransactionFun = (transaction: BaseConnection) => Promise<any>
+export type TransactionFun<T = unknown> = (transaction: BaseConnection) => Promise<T>
+
+export interface GetTablesParams {
+  catalog?: string
+  schema: string
+  table?: string
+}
+
+export type ColumnInfo = Metadata
+
+export interface PrimaryKeyInfo {
+  name: string
+  [key: string]: unknown
+}
 
 export interface Connection extends BaseConnection {
   pgm: (
     programName: string,
     paramsSchema: PgmParamType[],
     libraryName?: string,
-  ) => any
-  defineProgram: (options: ProgramDefinitionOptions) => any
-  getTablesAsStream: (params: any) => Readable
-  getColumns: (params: any) => any
-  getPrimaryKeys: (params: any) => any
-  transaction: (fn: TransactionFun) => Promise<any>
+  ) => (params: Record<string, Param>, timeout?: number) => Promise<unknown>
+  defineProgram: (options: ProgramDefinitionOptions) => (params: Record<string, Param>, timeout?: number) => Promise<unknown>
+  getTablesAsStream: (params: GetTablesParams) => Readable
+  getColumns: (params: { catalog?: string; schema: string; table: string; columns?: string }) => Promise<ColumnInfo[]>
+  getPrimaryKeys: (params: { catalog?: string; schema?: string; table: string }) => Promise<PrimaryKeyInfo[]>
+  transaction: <T = unknown>(fn: TransactionFun<T>) => Promise<T>
   openMessageQ: (params: MessageQOptions) => Promise<MessageQ>
   createKeyedDataQ: (params: DataQOptions) => KeyedDataQ
   openMessageFile: (

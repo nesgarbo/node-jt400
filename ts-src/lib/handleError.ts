@@ -1,11 +1,19 @@
 import { Oops } from 'oops-error'
 
-export function handleError(context: { [key: string]: any }) {
-  return (err: any) => {
-    const errMsg =
-      (err.cause && err.cause.getMessageSync && err.cause.getMessageSync()) ||
-      (err.getMessageSync && err.getMessageSync()) ||
-      err.message
+type JavaBridgeError = {
+  message?: string
+  cause?: { getMessageSync?: () => string }
+  getMessageSync?: () => string
+}
+
+export function handleError(context: Record<string, unknown>) {
+  return (err: unknown) => {
+    const e = err as JavaBridgeError
+    const errMsg: string =
+      e.cause?.getMessageSync?.() ??
+      e.getMessageSync?.() ??
+      e.message ??
+      String(err)
     const start = errMsg.indexOf(': ')
     const end = errMsg.indexOf('\n')
     const message = start > 0 && end > 0 ? errMsg.slice(start + 2, end) : errMsg
@@ -18,7 +26,7 @@ export function handleError(context: { [key: string]: any }) {
       message,
       context,
       category,
-      cause: err,
+      cause: err instanceof Error ? err : new Error(String(err)),
     })
   }
 }

@@ -28,10 +28,18 @@ function getJavaBridge() {
   }
   return javaBridge
 }
+export interface JT400Config {
+  host?: string
+  user?: string
+  password?: string
+  naming?: string
+  [key: string]: unknown
+}
+
 export type JT400Options = {
   logger?: Logger
 }
-export function pool(config = {}, options: JT400Options = {}): Connection {
+export function pool(config: JT400Config = {}, options: JT400Options = {}): Connection {
   const bridge = getJavaBridge()
   const javaCon = bridge.createPool(
     JSON.stringify({ ...defaultConfig, ...config }),
@@ -44,7 +52,7 @@ export function pool(config = {}, options: JT400Options = {}): Connection {
   })
 }
 export async function connect(
-  config = {},
+  config: JT400Config = {},
   options: JT400Options = {},
 ): Promise<Connection> {
   const bridge = getJavaBridge()

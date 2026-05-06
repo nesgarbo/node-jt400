@@ -1,6 +1,6 @@
 import { parse } from 'JSONStream'
-import { JDBCConnection } from '../java/JT400.js'
-import { BaseConnection, Param } from './baseConnection.types.js'
+import { JDBCConnection, StatementWrap } from '../java/JT400.js'
+import { BaseConnection, Param, Statement, StreamOptions } from './baseConnection.types.js'
 import { handleError } from './handleError.js'
 import { CreateInsertList } from './insertList.js'
 import { JdbcStream } from './jdbcstream.js'
@@ -8,7 +8,7 @@ import { createJdbcWriteStream } from './jdbcwritestream.js'
 import { Logger } from './logger.js'
 import { arrayToObject } from './streamTransformers.js'
 
-function convertDateValues(v: any) {
+function convertDateValues(v: Param): Param {
   return v instanceof Date
     ? v.toISOString().replace('T', ' ').replace('Z', '')
     : v
@@ -16,6 +16,109 @@ function convertDateValues(v: any) {
 
 function paramsToJson(params: Param[]) {
   return JSON.stringify((params || []).map(convertDateValues))
+}
+
+type LogContext = { sql: string; params: Param[]; logger: Logger }
+
+function buildStatementWrapper(st: StatementWrap, ctx?: LogContext): Statement {
+  let stream: JdbcStream | undefined
+
+  return {
+    prepare(sql: string) {
+      return st.prepare(sql)
+    },
+    isQuery() {
+      return st.isQuerySync()
+    },
+    async metadata() {
+      return st.getMetaData().then(JSON.parse)
+    },
+    async asArray() {
+      const startTime = ctx ? process.hrtime.bigint() : 0n
+      return st.asArray().then(JSON.parse).then((result: unknown[]) => {
+        if (ctx) {
+          ctx.logger.info({
+            sql: ctx.sql,
+            state: 'finished',
+            duration: Number(process.hrtime.bigint() - startTime),
+            parameterCount: ctx.params.length,
+            resultSize: result.length,
+          }, 'IBMI DB query executed')
+        }
+        return result as string[][]
+      })
+    },
+    asStream(options?: StreamOptions) {
+      const startTime = ctx ? process.hrtime.bigint() : 0n
+      stream = new JdbcStream({
+        jdbcStream: st.asStreamSync(options?.bufferSize ?? 100),
+      })
+      if (ctx) {
+        stream.on('end', () => {
+          ctx.logger.info({
+            sql: ctx.sql,
+            state: 'finished',
+            duration: Number(process.hrtime.bigint() - startTime),
+            parameterCount: ctx.params.length,
+          }, 'IBMI DB query as stream ended')
+        })
+      }
+      return stream
+    },
+    asObjectStream(options?: StreamOptions) {
+      const startTime = ctx ? process.hrtime.bigint() : 0n
+      return st.getMetaData().then(JSON.parse).then((metadata) => {
+        const transformArrayToObject = arrayToObject(metadata)
+        const parseJSON = parse('*')
+        stream = new JdbcStream({
+          jdbcStream: st.asStreamSync(options?.bufferSize ?? 100),
+        })
+        if (ctx) {
+          stream.on('end', () => {
+            ctx.logger.info({
+              sql: ctx.sql,
+              state: 'finished',
+              duration: Number(process.hrtime.bigint() - startTime),
+              parameterCount: ctx.params.length,
+            }, 'IBMI DB query as object stream ended')
+          })
+        }
+        return stream.pipe(parseJSON).pipe(transformArrayToObject)
+      })
+    },
+    asIterable() {
+      const startTime = ctx ? process.hrtime.bigint() : 0n
+      return {
+        [Symbol.asyncIterator]() {
+          return {
+            async next() {
+              return st.next().then(JSON.parse).then((value) => {
+                const done = !value
+                if (done && ctx) {
+                  ctx.logger.info({
+                    sql: ctx.sql,
+                    state: 'finished',
+                    duration: Number(process.hrtime.bigint() - startTime),
+                    parameterCount: ctx.params.length,
+                  }, 'IBMI DB query as iterable executed')
+                }
+                return { done, value }
+              })
+            },
+          }
+        },
+      }
+    },
+    updated() {
+      return st.updated()
+    },
+    close() {
+      if (stream) {
+        return stream.close()
+      }
+      return st.close()
+    },
+  }
 }
 
 export const createBaseConnection = function (
@@ -41,63 +144,11 @@ export const createBaseConnection = function (
           'createStatement is not supported by this JDBCConnection',
         )
       }
-
-      return jdbcConnection.createStatement().then((st) => {
-        return {
-          prepare(sql: string) {
-            return st.prepare(sql)
-          },
-          isQuery() {
-            return st.isQuerySync()
-          },
-          async metadata() {
-            return st.getMetaData().then(JSON.parse)
-          },
-          async asArray() {
-            return st.asArray().then(JSON.parse)
-          },
-          asIterable() {
-            return {
-              [Symbol.asyncIterator]: async function * () {
-                while (true) {
-                  const row = await st.next().then(JSON.parse)
-                  if (!row) break
-                  yield row
-                }
-              },
-            }
-          },
-          asStream(options) {
-            return new JdbcStream({
-              jdbcStream: st.asStreamSync(options?.bufferSize ?? 100),
-            })
-          },
-          asObjectStream(options) {
-            return st
-              .getMetaData()
-              .then(JSON.parse)
-              .then((metadata) => {
-                const transform = arrayToObject(metadata)
-                const stream = new JdbcStream({
-                  jdbcStream: st.asStreamSync(options?.bufferSize ?? 100),
-                })
-                return stream.pipe(parse('*')).pipe(transform)
-              })
-          },
-          updated() {
-            return st.updated()
-          },
-          close() {
-            return st.close()
-          },
-        }
-      })
+      return jdbcConnection.createStatement().then((st) => buildStatementWrapper(st))
     },
     query(sql, params = [], options) {
       const jsonParams = paramsToJson(params)
-
-      // Sending default options to java
-      const trim = options && options.trim !== undefined ? options.trim : true
+      const trim = options?.trim !== undefined ? options.trim : true
       logger.debug(
         { sql, state: 'starting', parameterCount: params.length },
         'Executing IBMI DB query',
@@ -106,7 +157,7 @@ export const createBaseConnection = function (
       return jdbcConnection
         .query(sql, jsonParams, trim)
         .then(JSON.parse)
-        .then((result: any[]) => {
+        .then((result: unknown[]) => {
           logger.info(
             {
               sql,
@@ -117,7 +168,7 @@ export const createBaseConnection = function (
             },
             'IBMI DB query executed',
           )
-          return result
+          return result as never[]
         })
         .catch(handleError({ sql, params }))
     },
@@ -154,140 +205,12 @@ export const createBaseConnection = function (
         { sql, state: 'starting', parameterCount: params.length },
         'Executing IBMI DB sql statement',
       )
-
       return jdbcConnection
         .execute(sql, jsonParams)
-        .then((statement) => {
-          const isQuery = statement.isQuerySync()
-          let stream
-
-          const stWrap = {
-            prepare(prepSql: string) {
-              return statement.prepare(prepSql)
-            },
-            isQuery() {
-              return isQuery
-            },
-            metadata() {
-              return statement.getMetaData().then(JSON.parse)
-            },
-            asArray() {
-              const startTime = process.hrtime.bigint()
-              return statement
-                .asArray()
-                .then(JSON.parse)
-                .then((result: any[]) => {
-                  logger.info(
-                    {
-                      sql,
-                      state: 'finished',
-                      duration: Number(process.hrtime.bigint() - startTime),
-                      parameterCount: params.length,
-                      resultSize: result.length,
-                    },
-                    'IBMI DB query executed',
-                  )
-                  return result
-                })
-            },
-            asStream(options) {
-              const startTime = process.hrtime.bigint()
-              options = options || {}
-              stream = new JdbcStream({
-                jdbcStream: statement.asStreamSync(options.bufferSize || 100),
-              })
-              stream.on('end', () => {
-                logger.info(
-                  {
-                    sql,
-                    state: 'finished',
-                    duration: Number(process.hrtime.bigint() - startTime),
-                    parameterCount: params.length,
-                  },
-                  'IBMI DB query as stream ended',
-                )
-              })
-              return stream
-            },
-            asObjectStream(options) {
-              const startTime = process.hrtime.bigint()
-              options = options || {}
-              const parseJSON = parse('*')
-
-              return statement
-                .getMetaData()
-                .then(JSON.parse)
-                .then((metadata) => {
-                  const transformArrayToObject = arrayToObject(metadata)
-                  stream = new JdbcStream({
-                    jdbcStream: statement.asStreamSync(
-                      options.bufferSize || 100,
-                    ),
-                  })
-                  stream.on('end', () => {
-                    logger.info(
-                      {
-                        sql,
-                        state: 'finished',
-                        duration: Number(process.hrtime.bigint() - startTime),
-                        parameterCount: params.length,
-                      },
-                      'IBMI DB query as object stream ended',
-                    )
-                  })
-
-                  return stream.pipe(parseJSON).pipe(transformArrayToObject)
-                })
-            },
-            asIterable() {
-              const startTime = process.hrtime.bigint()
-              return {
-                [Symbol.asyncIterator]() {
-                  return {
-                    async next() {
-                      return statement
-                        .next()
-                        .then(JSON.parse)
-                        .then((value) => {
-                          const done = !value
-                          if (done) {
-                            logger.info(
-                              {
-                                sql,
-                                state: 'finished',
-                                duration: Number(
-                                  process.hrtime.bigint() - startTime,
-                                ),
-                                parameterCount: jsonParams.length,
-                              },
-                              'IBMI DB query as iterable executed',
-                            )
-                          }
-                          return {
-                            done,
-                            value,
-                          }
-                        })
-                    },
-                  }
-                },
-              }
-            },
-            updated() {
-              return statement.updated()
-            },
-            close() {
-              if (stream) {
-                return stream.close()
-              }
-              return statement.close()
-            },
-          }
-
-          return stWrap
-        })
+        .then((st) => buildStatementWrapper(st, { sql, params, logger }))
         .catch(handleError({ sql, params }))
     },
+
     update(sql, params = []) {
       const jsonParams = paramsToJson(params)
       logger.info(
@@ -319,7 +242,7 @@ export const createBaseConnection = function (
       const stream = createJdbcWriteStream(
         baseConnection.batchUpdate,
         sql,
-        options && options.bufferSize,
+        options?.bufferSize,
       )
       stream.on('finish', () => {
         logger.info(
@@ -335,7 +258,10 @@ export const createBaseConnection = function (
     },
 
     batchUpdate(sql, paramsList) {
-      const params = (paramsList || []).map((row) => {
+      if (!paramsList || paramsList.length === 0) {
+        return Promise.resolve([])
+      }
+      const params = paramsList.map((row) => {
         return row.map(convertDateValues)
       })
 
@@ -390,6 +316,26 @@ export const createBaseConnection = function (
 
     insertList(tableName, idColumn, list) {
       return insertListFun(baseConnection)(tableName, idColumn, list)
+    },
+
+    queryCursor<T>(sql: string, params: Param[] = []) {
+      const jsonParams = paramsToJson(params)
+      return (async function* () {
+        const st = await jdbcConnection
+          .execute(sql, jsonParams)
+          .catch(handleError({ sql, params }))
+        try {
+          while (true) {
+            const json = await st.next()
+            if (!json) break
+            const row: T = JSON.parse(json)
+            if (row === null || row === undefined) break
+            yield row
+          }
+        } finally {
+          await st.close()
+        }
+      })() as AsyncIterable<T>
     },
 
     isInMemory() {

@@ -1,34 +1,29 @@
-import { IfsWriteStream as IfsWriteStreamType } from '../../java/JT400.js'
-import util from 'util'
-import FlushWritable from 'flushwritable'
+import { Writable } from 'stream'
+import { IfsWriteStream as IfsWriteStreamJava } from '../../java/JT400.js'
 
 type Opt = {
-  ifsWriteStream: Promise<IfsWriteStreamType>
+  ifsWriteStream: Promise<IfsWriteStreamJava>
 }
 
-export function IfsWriteStream(opt: Opt) {
-  FlushWritable.call(this, { objectMode: false })
-  this._ifsWriteStream = opt.ifsWriteStream
-}
+export class IfsWriteStream extends Writable {
+  private readonly _ifsWriteStream: Promise<IfsWriteStreamJava>
 
-util.inherits(IfsWriteStream, FlushWritable)
+  constructor(opt: Opt) {
+    super({ objectMode: false })
+    this._ifsWriteStream = opt.ifsWriteStream
+  }
 
-IfsWriteStream.prototype._write = function (
-  chunk: Buffer,
-  _: any,
-  next: (err?: any) => void,
-) {
-  const writeStream: Promise<IfsWriteStreamType> = this._ifsWriteStream
-  writeStream
-    .then((stream) => stream.write(chunk)) // Buffer -> byte[] (auto por java-bridge)
-    .then(() => next())
-    .catch((err) => this.emit('error', err))
-}
+  _write(chunk: Buffer, _: BufferEncoding, next: (err?: Error | null) => void) {
+    this._ifsWriteStream
+      .then((stream) => stream.write(chunk))
+      .then(() => next())
+      .catch((err) => next(err))
+  }
 
-IfsWriteStream.prototype._flush = function (done: (err?: any) => void) {
-  const writeStream: Promise<IfsWriteStreamType> = this._ifsWriteStream
-  writeStream
-    .then((stream) => stream.flush())
-    .then(() => done())
-    .catch((err) => done(err))
+  _final(done: (err?: Error | null) => void) {
+    this._ifsWriteStream
+      .then((stream) => stream.flush())
+      .then(() => done())
+      .catch((err) => done(err))
+  }
 }

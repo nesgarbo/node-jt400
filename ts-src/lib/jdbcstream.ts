@@ -1,49 +1,50 @@
-import { inherits } from 'util'
 import { Readable } from 'stream'
+import { ResultStream } from '../java/JT400.js'
 
-export function JdbcStream(opt) {
-  Readable.call(this, { objectMode: false })
-  this._jdbcStream = opt.jdbcStream
-  this._jdbcStreamPromise = opt.jdbcStreamPromise
+type Opt = {
+  jdbcStream?: ResultStream
+  jdbcStreamPromise?: Promise<ResultStream>
 }
 
-inherits(JdbcStream, Readable)
+export class JdbcStream extends Readable {
+  private _jdbcStream?: ResultStream
+  private _jdbcStreamPromise?: Promise<ResultStream>
+  private _closed = false
 
-function read(context) {
-  if (context._closed) {
-    context._jdbcStream.close().catch((err) => {
-      if (err) {
-        context.emit('error', err)
-      }
-    })
-    context.push(null)
-  } else {
-    context._jdbcStream
-      .read()
-      .then((res) => {
-        context.push(res)
-      })
-      .catch((err) => {
-        context.emit('error', err)
-      })
+  constructor(opt: Opt) {
+    super({ objectMode: false })
+    this._jdbcStream = opt.jdbcStream
+    this._jdbcStreamPromise = opt.jdbcStreamPromise
   }
-}
 
-JdbcStream.prototype.close = function () {
-  this._closed = true
-}
+  close() {
+    this._closed = true
+  }
 
-JdbcStream.prototype._read = function () {
-  if (!this._jdbcStream) {
-    this._jdbcStreamPromise
-      .then((stream) => {
-        this._jdbcStream = stream
-        read(this)
+  private _readFromStream(stream: ResultStream) {
+    if (this._closed) {
+      stream.close().catch((err) => {
+        if (err) this.emit('error', err)
       })
-      .catch((err) => {
-        this.emit('error', err)
-      })
-  } else {
-    read(this)
+      this.push(null)
+    } else {
+      stream
+        .read()
+        .then((res) => this.push(res))
+        .catch((err) => this.emit('error', err))
+    }
+  }
+
+  _read() {
+    if (!this._jdbcStream) {
+      this._jdbcStreamPromise!
+        .then((stream) => {
+          this._jdbcStream = stream
+          this._readFromStream(stream)
+        })
+        .catch((err) => this.emit('error', err))
+    } else {
+      this._readFromStream(this._jdbcStream)
+    }
   }
 }

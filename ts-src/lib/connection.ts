@@ -3,9 +3,13 @@ import { JT400 } from '../java/JT400.js'
 import { createBaseConnection } from './baseConnection.js'
 import {
   Connection,
+  DataQReadOptions,
   JustNameMessageQ,
   MessageFileHandlerOptions,
+  MessageFileReadOptions,
   MessageQOptions,
+  MessageQReadOptions,
+  PgmParamType,
   ProgramDefinitionOptions,
 } from './connection.types.js'
 import { handleError } from './handleError.js'
@@ -84,15 +88,9 @@ export function createConnection({
       const name = isJustNameMessageQ(opt) ? opt.name : opt.path
       const dq = await connection.openMessageQ(name, hasPath)
       return {
-        // write (key, data) {
-        // 	dq.writeSync(key, data);
-        // },
-        read() {
-          let wait = -1
-          if (arguments[0] === Object(arguments[0])) {
-            wait = arguments[0].wait || wait
-          }
-          return dq.read(wait)
+        read(params?: MessageQReadOptions) {
+          const wait = params?.wait ?? -1
+          return dq.read(wait).then((json) => json ? JSON.parse(json) : null)
         },
         sendInformational(messageText) {
           return dq.sendInformational(messageText)
@@ -101,7 +99,7 @@ export function createConnection({
     },
     createKeyedDataQ(opt) {
       const dq = connection.createKeyedDataQSync(opt.name)
-      const readRes = async function (key, wait, writeKeyLength) {
+      const readRes = async (key: string, wait: number, writeKeyLength: number) => {
         const res = await dq.readResponse(key, wait, writeKeyLength)
         const data = await res.getData()
         return {
@@ -113,17 +111,11 @@ export function createConnection({
         write(key, data) {
           return dq.write(key, data)
         },
-        read() {
-          let wait = -1
-          let key: string
-          let writeKeyLength
-          if (arguments[0] === Object(arguments[0])) {
-            key = arguments[0].key
-            wait = arguments[0].wait || wait
-            writeKeyLength = arguments[0].writeKeyLength
-          } else {
-            key = arguments[0]
+        read(params: DataQReadOptions | string) {
+          if (typeof params === 'string') {
+            return dq.read(params, -1)
           }
+          const { key, wait = -1, writeKeyLength } = params
           return writeKeyLength
             ? readRes(key, wait, writeKeyLength)
             : dq.read(key, wait)
@@ -133,9 +125,8 @@ export function createConnection({
     async openMessageFile(opt: MessageFileHandlerOptions) {
       const messageFile = await connection.openMessageFile(opt.path)
       return {
-        read() {
-          const messageId = arguments[0].messageId
-          return messageFile.read(messageId)
+        read(params: MessageFileReadOptions) {
+          return messageFile.read(params.messageId)
         },
       }
     },
@@ -156,13 +147,13 @@ export function createConnection({
           .catch(handleError({ programName: opt.programName, params, timeout }))
       }
     },
-    pgm: deprecate(function (programName, paramsSchema, libraryName) {
-      return this.defineProgram({
+    pgm: deprecate(function (programName: string, paramsSchema: PgmParamType[], libraryName?: string) {
+      return jt400.defineProgram({
         programName,
         paramsSchema,
         libraryName,
       })
-    }, 'pgm function is deprecated and will be removed in version 5.0. Please use defineProgram.'),
+    }, 'pgm function is deprecated and will be removed in version 7.0. Please use defineProgram.'),
     close() {
       return connection.close()
     },

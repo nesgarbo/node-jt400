@@ -1,6 +1,7 @@
 import { Transform } from 'stream'
+import { Metadata } from './baseConnection.types.js'
 
-export function arrayToObject(metadata) {
+export function arrayToObject(metadata: Metadata[]) {
   const columnNames = metadata.map((md) => md.name)
 
   const transformer = new Transform({
@@ -26,7 +27,7 @@ export function arrayToObject(metadata) {
 
         callback(null, obj)
       } catch (err) {
-        callback(err)
+        callback(err instanceof Error ? err : new Error(String(err)))
       }
     },
   })

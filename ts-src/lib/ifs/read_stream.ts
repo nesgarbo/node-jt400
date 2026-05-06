@@ -1,39 +1,44 @@
-import util from 'util'
 import { Readable } from 'stream'
-import { IfsReadStream as IfsReadStreamType } from '../../java/JT400.js'
+import { IfsReadStream as IfsReadStreamJava } from '../../java/JT400.js'
 
 type Opt = {
-  ifsReadStream: Promise<IfsReadStreamType>
+  ifsReadStream: Promise<IfsReadStreamJava>
 }
 
-export function IfsReadStream(opt: Opt) {
-  Readable.call(this, { objectMode: false })
-  this._ifsReadStream = opt.ifsReadStream
-}
+export class IfsReadStream extends Readable {
+  private readonly _ifsReadStream: Promise<IfsReadStreamJava>
 
-util.inherits(IfsReadStream, Readable)
+  constructor(opt: Opt) {
+    super({ objectMode: false })
+    this._ifsReadStream = opt.ifsReadStream
+  }
 
-IfsReadStream.prototype._read = function () {
-  const streamPromise: Promise<IfsReadStreamType> = this._ifsReadStream
-  streamPromise
-    .then((stream) =>
-      stream.read().then((res: any) => {
-        // java-bridge convierte byte[] -> Buffer automáticamente
-        if (res == null) {
-          this.push(null) // EOF
-          return
-        }
+  _read() {
+    this._ifsReadStream
+      .then((stream) =>
+        stream.read().then((res) => {
+          // Cast to unknown: java-bridge may return Buffer, Uint8Array, or raw byte[] depending on JVM version
+          const raw: unknown = res
+          if (raw == null) {
+            this.push(null)
+            return
+          }
 
-        const buf =
-          Buffer.isBuffer(res) ? res : res instanceof Uint8Array ? Buffer.from(res) : Buffer.from(res as any)
+          const buf =
+            Buffer.isBuffer(raw)
+              ? raw
+              : raw instanceof Uint8Array
+                ? Buffer.from(raw)
+                : Buffer.from(raw as ArrayBuffer)
 
-        if (buf.length === 0) {
-          this.push(null) // EOF defensivo si llega vacío
-          return
-        }
+          if (buf.length === 0) {
+            this.push(null)
+            return
+          }
 
-        this.push(buf)
-      }),
-    )
-    .catch((err: any) => this.emit('error', err))
+          this.push(buf)
+        }),
+      )
+      .catch((err: unknown) => this.emit('error', err))
+  }
 }

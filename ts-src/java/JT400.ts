@@ -30,12 +30,12 @@ export interface JDBCConnection {
 
   execute: (sql: string, jsonParams: string) => Promise<StatementWrap>
   getTablesAsStreamSync: (
-    catalog: string,
+    catalog: string | undefined,
     schema: string,
     tableName: string,
   ) => TablesReadStream
   getColumns: (
-    catalog: string,
+    catalog: string | undefined,
     schema: string,
     tableNamePattern: string,
     columnNamePattern: string,
@@ -43,18 +43,10 @@ export interface JDBCConnection {
   update: (sql: string, jsonParams: string) => Promise<number>
   batchUpdate: (sql: string, jsonParams: string) => Promise<number[]>
   insertAndGetId: (sql: string, jsonParams: string) => Promise<number>
-   // ----- NUEVOS PARA COMPATIBILIDAD ODBC -----
-
-  /** Ejecuta commit en este JDBC Connection */
   commit: () => Promise<void>
-
-  /** Ejecuta rollback en este JDBC Connection */
   rollback: () => Promise<void>
-
-  /** Crea un PreparedStatement */
   createStatement: () => Promise<StatementWrap>
-
-  /** Devuelve un CursorWrap (modo ODBC con callback) */
+  /** CursorWrap — not yet used in current implementation */
   queryAsCursor: (
     sql: string,
     jsonParams: string,
@@ -64,7 +56,7 @@ export interface JDBCConnection {
 }
 
 export interface CursorWrap {
-  next: () => Promise<string>// JSON de una fila
+  next: () => Promise<string>
   close: () => Promise<void>
 }
 
@@ -118,8 +110,8 @@ export interface IfsWriteStream {
 export interface JT400 extends JDBCConnection {
   createTransactionSync: () => Transaction
   getPrimaryKeys: (
-    catalog: string,
-    schema: string,
+    catalog: string | undefined,
+    schema: string | undefined,
     table: string,
   ) => Promise<string>
   pgmSync: (
